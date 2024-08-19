@@ -32,6 +32,8 @@ public class PlayerLoginListener implements WebSocket.Listener {
         Player player = event.getPlayer();
 
         if (!event.getPlayer().isTransferred()) {
+            // todo: check if its allowed to join directly otherwise kick
+            // event.disallow(PlayerLoginEvent.Result.KICK_OTHER, "You need to join through a trusted server");
             return;
         }
 
@@ -75,14 +77,14 @@ public class PlayerLoginListener implements WebSocket.Listener {
 
                     if (amt.decrementAndGet() == 0) {
                         // finished
-                        finishCookie(player, verifyCookie, internalCookies);
+                        finishCookie(conveyPlayer, verifyCookie, internalCookies);
                     }
                 });
             }
         });
     }
 
-    public void finishCookie(Player player, CookieUtil.VerifyCookie verifyCookie, List<CookieUtil.InternalCookie> internalCookies) {
+    public void finishCookie(ConveyPlayer conveyPlayer, CookieUtil.VerifyCookie verifyCookie, List<CookieUtil.InternalCookie> internalCookies) {
 
     }
 

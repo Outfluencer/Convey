@@ -13,7 +13,6 @@ public class AbstractPacketHandler {
     }
 
     public void handle(ServerInfoPacket serverInfoPacket) {
-        System.out.println(serverInfoPacket);
     }
 
     public void disconnected(Channel channel) {

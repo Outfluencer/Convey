@@ -31,7 +31,7 @@ public class PipelineUtils {
         bootstrap.handler(CHANNEL_CHANNEL_INITIALIZER_CLIENT);
         bootstrap.group(new NioEventLoopGroup());
         bootstrap.connect("localhost", 21639).addListener((ChannelFutureListener) channelFuture -> {
-            channelFuture.channel().writeAndFlush(new HelloPacket("213r7t6f432e6tfzg28796rt726wtgfd7869g786G/&TG/rfw3g7fgw7rf762wrf72w9783df2qw%&"));
+            channelFuture.channel().writeAndFlush(new HelloPacket("213r7t6f432e6tfzg28796rt726wtgfd7869g786G/&TG/rfw3g7fgw7rf762wrf72w9783df2qw%&", 1));
         });
     }
 

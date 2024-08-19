@@ -21,4 +21,9 @@ public class PacketEncoder extends MessageToByteEncoder<AbstractPacket> {
         packet.write(buf);
     }
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+        ctx.close();
+    }
 }

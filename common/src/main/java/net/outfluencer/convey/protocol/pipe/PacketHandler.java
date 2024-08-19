@@ -15,6 +15,7 @@ public class PacketHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        System.out.println(ctx  + " Packet received: " + msg);
         if(msg instanceof AbstractPacket packet) {
             packet.handle(handler);
         }

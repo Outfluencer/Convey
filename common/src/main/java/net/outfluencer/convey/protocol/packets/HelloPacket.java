@@ -12,15 +12,18 @@ import net.outfluencer.convey.protocol.AbstractPacketHandler;
 public class HelloPacket extends AbstractPacket {
 
     private String key;
+    private int port;
 
     @Override
     public void read(ByteBuf buf) {
         key = readString(buf);
+        port = readVarInt(buf);
     }
 
     @Override
     public void write(ByteBuf buf) {
         writeString(key, buf);
+        writeVarInt(port, buf);
     }
 
     @Override

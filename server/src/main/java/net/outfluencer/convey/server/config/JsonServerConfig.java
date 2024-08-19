@@ -17,13 +17,13 @@ public class JsonServerConfig {
     public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     @SerializedName("bind")
-    public String bind = "0.0.0.0:21639";
+    public String bind = "157.90.241.237:21639";
 
     @SerializedName("cookie-encryption-key")
     public String cookieEncryptionKey = "213r7t6f432e6tfzg28796rt726wtgfd7869g786G/&TG/rfw3g7fgw7rf762wrf72w9783df2qw%&";
 
     @SerializedName("hosts")
-    public List<Host> hosts = List.of(new Host("lobby-1", "127.0.0.1:25565", false), new Host("lobby-2", "127.0.0.1:25566", false));
+    public List<Host> hosts = List.of(new Host("lobby-1", "157.90.241.237:25565", false), new Host("lobby-2", "157.90.241.237:25566", false));
 
 
     @Data

@@ -1,0 +1,7 @@
+name: Convey
+main: net.outfluencer.convey.Convey
+author: Outfluencer
+version: 1.0
+api-version: 1.21
+commands:
+  convey:
