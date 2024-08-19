@@ -5,9 +5,22 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.outfluencer</groupId>
-    <artifactId>Convey</artifactId>
+    <artifactId>convy-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+    <name>Convey-Parent</name>
+    <description>Parent project for all Convey modules.</description>
+    <url>https://github.com/Outfluencer/Convey</url>
+    <inceptionYear>2024</inceptionYear>
+
+    <developers>
+        <developer>
+            <id>Outfluencer</id>
+        </developer>
+    </developers>
+
+
     <modules>
         <module>server</module>
         <module>common</module>
