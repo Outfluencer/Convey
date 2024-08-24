@@ -4,6 +4,7 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import net.outfluencer.convey.protocol.packets.AbstractPacket;
 import net.outfluencer.convey.protocol.packets.HelloPacket;
+import net.outfluencer.convey.protocol.packets.PingPacket;
 import net.outfluencer.convey.protocol.packets.ServerInfoPacket;
 
 import java.util.HashMap;
@@ -38,10 +39,10 @@ public class PacketRegistry {
 
     static {
         TO_SERVER = new Supplier[]{
-                HelloPacket::new
+                HelloPacket::new, PingPacket::new
         };
         TO_CLIENT = new Supplier[]{
-                ServerInfoPacket::new
+                ServerInfoPacket::new, PingPacket::new
         };
 
         for (int i = 0; i < TO_SERVER.length; i++) {

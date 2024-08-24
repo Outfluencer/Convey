@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import io.netty.channel.Channel;
 import net.outfluencer.convey.protocol.AbstractPacketHandler;
 import net.outfluencer.convey.protocol.packets.HelloPacket;
+import net.outfluencer.convey.protocol.packets.PingPacket;
 import net.outfluencer.convey.protocol.packets.ServerInfoPacket;
 import net.outfluencer.convey.server.Convey;
 import net.outfluencer.convey.server.config.JsonServerConfig;
@@ -36,28 +37,33 @@ public class ServerPacketHandler extends AbstractPacketHandler {
         String yourName = null;
 
         String hostAddress = ((InetSocketAddress)channel.remoteAddress()).getAddress().getHostAddress();
-        System.out.println(hostAddress);
         ArrayList<ServerInfoPacket.Host> serverInfos = new ArrayList<>();
         for (JsonServerConfig.Host host : config.hosts) {
             ServerInfoPacket.Host serverInfo = new ServerInfoPacket.Host();
-            serverInfo.setName(host.name);
-            serverInfo.setAddress(host.address);
-            serverInfo.setRequiresPermission(host.requiresPermission);
+            serverInfo.setName(host.getName());
+            serverInfo.setAddress(host.getAddress());
+            serverInfo.setRequiresPermission(host.isRequiresPermission());
+            serverInfo.setJoinDirectly(host.isJoinDirectly());
+            serverInfo.setFallbackServer(host.isFallbackServer());
             serverInfos.add(serverInfo);
-            if(host.address.equals(hostAddress + ":" + helloPacket.getPort())) {
-                yourName = host.name;
+            if(host.getAddress().equals(hostAddress + ":" + helloPacket.getPort())) {
+                yourName = host.getName();
             }
         }
 
-        System.out.println("yourname " + yourName);
         Preconditions.checkState(yourName != null, "could not find your name");
 
-        ServerInfoPacket serverInfoPacket = new ServerInfoPacket(config.cookieEncryptionKey, serverInfos, yourName);
+        ServerInfoPacket serverInfoPacket = new ServerInfoPacket(serverInfos, yourName);
         channel.writeAndFlush(serverInfoPacket).addListener(future -> {
-            System.out.println(future.isSuccess());
             if (!future.isSuccess()) {
                 future.cause().printStackTrace();
             }
         });
+    }
+
+    @Override
+    public void handle(PingPacket pingPacket) {
+        System.out.println("received: " + pingPacket);
+        channel.writeAndFlush(pingPacket);
     }
 }

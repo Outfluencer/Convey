@@ -6,7 +6,9 @@ import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import net.outfluencer.convey.utils.AESUtils;
 
+import java.util.Base64;
 import java.util.List;
 
 @Data
@@ -14,16 +16,16 @@ import java.util.List;
 @NoArgsConstructor
 public class JsonServerConfig {
 
-    public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public static final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     @SerializedName("bind")
     public String bind = "157.90.241.237:21639";
 
-    @SerializedName("cookie-encryption-key")
-    public String cookieEncryptionKey = "213r7t6f432e6tfzg28796rt726wtgfd7869g786G/&TG/rfw3g7fgw7rf762wrf72w9783df2qw%&";
+    @SerializedName("encryption-key")
+    public String encryptionKey = Base64.getEncoder().encodeToString(AESUtils.generateKey().getEncoded());
 
     @SerializedName("hosts")
-    public List<Host> hosts = List.of(new Host("lobby-1", "157.90.241.237:25565", false), new Host("lobby-2", "157.90.241.237:25566", false));
+    public List<Host> hosts = List.of(new Host("lobby-1", "157.90.241.237:25565", false, true, true), new Host("lobby-2", "157.90.241.237:25566", false, true, true));
 
 
     @Data
@@ -31,11 +33,15 @@ public class JsonServerConfig {
     @NoArgsConstructor
     public class Host {
         @SerializedName("name")
-        public String name;
+        private String name;
         @SerializedName("address")
-        public String address;
+        private String address;
         @SerializedName("requires-permission")
-        public boolean requiresPermission;
+        private boolean requiresPermission;
+        @SerializedName("can-join-directly")
+        private boolean joinDirectly;
+        @SerializedName("is-fallback-server")
+        private boolean fallbackServer;
     }
 
     public String toString() {

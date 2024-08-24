@@ -15,45 +15,46 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ServerInfoPacket extends AbstractPacket {
 
-    private String encryptionKey;
     private List<Host> serverInfo;
     private String yourName;
 
     @Override
     public void read(ByteBuf buf) {
-        encryptionKey = readString(buf);
         int len = readVarInt(buf);
         serverInfo = new ArrayList<>();
         for (int i = 0; i < len; i++) {
-            serverInfo.add(new Host(readString(buf), readString(buf), buf.readBoolean()));
+            serverInfo.add(new Host(readString(buf), readString(buf), buf.readBoolean(), buf.readBoolean(), buf.readBoolean()));
         }
         yourName = readString(buf);
     }
 
     @Override
     public void write(ByteBuf buf) {
-        writeString(encryptionKey, buf);
         writeVarInt(serverInfo.size(), buf);
         serverInfo.forEach(host -> {
             writeString(host.getName(), buf);
             writeString(host.getAddress(), buf);
             buf.writeBoolean(host.isRequiresPermission());
+            buf.writeBoolean(host.isJoinDirectly());
+            buf.writeBoolean(host.isFallbackServer());
         });
         writeString(yourName, buf);
     }
 
     @Override
-    public void handle(AbstractPacketHandler handler) throws Exception {
+    public void handle(AbstractPacketHandler handler) {
         handler.handle(this);
     }
 
     @Data
-    @AllArgsConstructor
     @NoArgsConstructor
+    @AllArgsConstructor
     public static class Host {
-        public String name;
-        public String address;
-        public boolean requiresPermission;
+        private String name;
+        private String address;
+        private boolean requiresPermission;
+        private boolean joinDirectly;
+        private boolean fallbackServer;
     }
 
 }

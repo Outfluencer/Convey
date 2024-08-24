@@ -19,13 +19,11 @@ public class PacketDecoder extends MessageToMessageDecoder<ByteBuf> {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
         if (!ctx.channel().isActive()) {
-            System.out.println("LOL!");
             return;
         }
-        int packetId = AbstractPacket.readVarInt(buf);
-        System.out.println("Packet ID " + toServer + ": " + packetId);
-        AbstractPacket packet = PacketRegistry.createPacket(packetId, toServer);
+        AbstractPacket packet = PacketRegistry.createPacket(AbstractPacket.readVarInt(buf), toServer);
         packet.read(buf);
         out.add(packet);
+        System.out.println(packet);
     }
 }
