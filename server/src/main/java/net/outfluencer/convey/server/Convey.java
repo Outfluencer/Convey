@@ -1,56 +1,37 @@
 package net.outfluencer.convey.server;
 
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.timeout.ReadTimeoutHandler;
 import lombok.Getter;
-import net.outfluencer.convey.protocol.pipe.*;
+import net.outfluencer.convey.protocol.packets.ServerInfoPacket;
 import net.outfluencer.convey.server.config.JsonServerConfig;
-import net.outfluencer.convey.server.handler.ServerPacketHandler;
+import net.outfluencer.convey.server.netty.NettyServer;
+import net.outfluencer.convey.utils.AESUtils;
 
+import javax.crypto.SecretKey;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Convey {
 
     @Getter
     private static Convey convey;
-
-    public static final ChannelInitializer<Channel> CHANNEL_CHANNEL_INITIALIZER_SERVER = new ChannelInitializer<>() {
-        @Override
-        protected void initChannel(Channel ch) {
-            ch.pipeline().addLast(new Varint21FrameDecoder());
-            ch.pipeline().addLast(new ReadTimeoutHandler(30));
-            ch.pipeline().addLast(new PacketDecoder(true));
-            ch.pipeline().addLast(new Varint21LengthFieldPrepender());
-            ch.pipeline().addLast(new PacketEncoder(false));
-            ch.pipeline().addLast(new PacketHandler(new ServerPacketHandler()));
-        }
-    };
-
-    public void startListener() {
-        EventLoopGroup group = new NioEventLoopGroup();
-        ServerBootstrap serverBootstrap = new ServerBootstrap();
-        serverBootstrap.channel(NioServerSocketChannel.class);
-        serverBootstrap.group(group);
-        serverBootstrap.childHandler(CHANNEL_CHANNEL_INITIALIZER_SERVER);
-        String[] arr = config.bind.split(":");
-        serverBootstrap.bind(new InetSocketAddress(arr[0], Integer.valueOf(arr[1])));
-    }
-
+    @Getter
+    private SecretKey secretKey;
     @Getter
     private JsonServerConfig config;
+    @Getter
+    private NettyServer nettyServer;
+    @Getter
+    private Map<String, JsonServerConfig.Host> serverInfos;
 
     public void init() {
         convey = this;
-        System.out.println("Starting server...");
+
+        System.out.println("Loading config...");
         try {
             loadConfig();
         } catch (IOException e) {
@@ -58,9 +39,12 @@ public class Convey {
             e.printStackTrace();
             return;
         }
-        System.out.println("Config loaded");
+        System.out.println("Parsing secret key...");
+        this.secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(config.encryptionKey));
 
-        startListener();
+        System.out.println("Starting Netty server...");
+        nettyServer = new NettyServer(this);
+        nettyServer.startListener();
     }
 
     public void loadConfig() throws IOException {
@@ -74,6 +58,9 @@ public class Convey {
             writer.flush();
             writer.close();
         }
+        Map<String, JsonServerConfig.Host> serverInfos = new HashMap<>();
+        config.getHosts().forEach(host -> serverInfos.put(host.getName(), host));
+        this.serverInfos = serverInfos;
     }
 
 }

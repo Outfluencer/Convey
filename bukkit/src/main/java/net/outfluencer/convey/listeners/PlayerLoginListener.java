@@ -6,8 +6,6 @@ import com.google.common.cache.CacheBuilder;
 import net.outfluencer.convey.Convey;
 import net.outfluencer.convey.ConveyPlayer;
 import net.outfluencer.convey.api.Server;
-import net.outfluencer.convey.protocol.packets.ServerInfoPacket;
-import net.outfluencer.convey.utils.AESUtils;
 import net.outfluencer.convey.utils.CookieUtil;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -28,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class PlayerLoginListener implements Listener {
 
-    public static final long EXPIRE_AFTER = TimeUnit.SECONDS.toMillis(10);
+    public static final long EXPIRE_AFTER = TimeUnit.SECONDS.toMillis(30);
 
     private Cache<UUID, Long> verifyCache = CacheBuilder.newBuilder()
             .expireAfterWrite(EXPIRE_AFTER + 5000, TimeUnit.MILLISECONDS).build();
@@ -62,7 +60,7 @@ public class PlayerLoginListener implements Listener {
         player.retrieveCookie(CookieUtil.VERIFY_COOKIE).thenAccept(data -> {
             try {
                 Preconditions.checkState(data != null && data.length > 0, "empty cookie");
-                data = AESUtils.decrypt(data, convey.getSecretKey());
+                data = convey.getAesUtils().decrypt(data);
                 CookieUtil.VerifyCookie verifyCookie = new CookieUtil.VerifyCookie();
                 verifyCookie.read(new DataInputStream(new ByteArrayInputStream(data)));
                 Preconditions.checkState(verifyCookie.getUuid().equals(player.getUniqueId()), "invalid uuid verifyCookie ");
@@ -87,7 +85,7 @@ public class PlayerLoginListener implements Listener {
                 for (String clientCookie : verifyCookie.getClientCookies()) {
                     player.retrieveCookie(NamespacedKey.fromString(clientCookie)).thenAccept(d -> {
                         try {
-                            d = AESUtils.decrypt(d, convey.getSecretKey());
+                            d = convey.getAesUtils().decrypt(d);
                             CookieUtil.InternalCookie internalCookie = new CookieUtil.InternalCookie();
                             internalCookie.read(new DataInputStream(new ByteArrayInputStream(d)));
                             Preconditions.checkState(internalCookie.getUuid().equals(player.getUniqueId()), "invalid uuid internalCookie");

@@ -3,8 +3,9 @@ package net.outfluencer.convey.protocol.packets;
 import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import net.outfluencer.convey.api.Server;
+import net.outfluencer.convey.api.UserData;
 import net.outfluencer.convey.protocol.AbstractPacketHandler;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ServerInfoPacket extends AbstractPacket {
 
-    private List<Host> serverInfo;
+    private List<Server> serverInfo;
     private String yourName;
 
     @Override
@@ -23,7 +24,19 @@ public class ServerInfoPacket extends AbstractPacket {
         int len = readVarInt(buf);
         serverInfo = new ArrayList<>();
         for (int i = 0; i < len; i++) {
-            serverInfo.add(new Host(readString(buf), readString(buf), buf.readBoolean(), buf.readBoolean(), buf.readBoolean()));
+            String name = readString(buf);
+            String address = readString(buf);
+            boolean requiresPermission = buf.readBoolean();
+            boolean joinDirectly = buf.readBoolean();
+            boolean fallbackServer = buf.readBoolean();
+            int userLen = readVarInt(buf);
+            List<UserData> users = new ArrayList<>();
+            for (int j = 0; j < userLen; j++) {
+                UserData userData = new UserData();
+                userData.read(buf);
+                users.add(userData);
+            }
+            serverInfo.add(new Server(name, address, requiresPermission, joinDirectly, fallbackServer, users));
         }
         yourName = readString(buf);
     }
@@ -37,6 +50,9 @@ public class ServerInfoPacket extends AbstractPacket {
             buf.writeBoolean(host.isRequiresPermission());
             buf.writeBoolean(host.isJoinDirectly());
             buf.writeBoolean(host.isFallbackServer());
+
+            writeVarInt(host.getConnectedUsers().size(), buf);
+            host.getConnectedUsers().forEach(user -> user.write(buf));
         });
         writeString(yourName, buf);
     }
@@ -46,15 +62,5 @@ public class ServerInfoPacket extends AbstractPacket {
         handler.handle(this);
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Host {
-        private String name;
-        private String address;
-        private boolean requiresPermission;
-        private boolean joinDirectly;
-        private boolean fallbackServer;
-    }
 
 }

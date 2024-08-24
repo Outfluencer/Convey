@@ -7,6 +7,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,11 +15,13 @@ import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.commands.ConveyCommand;
 import net.outfluencer.convey.commands.ServerCommand;
 import net.outfluencer.convey.handler.ClientPacketHandler;
+import net.outfluencer.convey.listeners.PlayerJoinListener;
 import net.outfluencer.convey.listeners.PlayerKickListener;
 import net.outfluencer.convey.listeners.PlayerLoginListener;
 import net.outfluencer.convey.listeners.PlayerQuitListener;
 import net.outfluencer.convey.protocol.pipe.*;
 import net.outfluencer.convey.utils.AESUtils;
+import net.outfluencer.convey.utils.CookieUtil;
 import net.outfluencer.convey.utils.TransferUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -53,6 +56,10 @@ public class Convey extends JavaPlugin {
     private TransferUtils transferUtils = new TransferUtils(this);
     @Getter
     private SecretKey secretKey;
+    @Getter
+    private AESUtils aesUtils;
+    @Getter
+    private CookieUtil cookieUtil;
 
     public boolean masterIsConnected() {
         return master != null && master.isActive();
@@ -71,11 +78,15 @@ public class Convey extends JavaPlugin {
         }
 
         instance = this;
+        aesUtils = new AESUtils(secretKey);
+        cookieUtil = new CookieUtil();
+
         reloadMessages();
 
         Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerKickListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
 
 
 
@@ -103,10 +114,14 @@ public class Convey extends JavaPlugin {
     public ChannelInitializer<io.netty.channel.Channel> CHANNEL_CHANNEL_INITIALIZER_CLIENT = new ChannelInitializer<>() {
         @Override
         protected void initChannel(Channel ch) {
+            AESUtils aes = new AESUtils(secretKey);
+
             ch.pipeline().addLast(new Varint21FrameDecoder());
+            ch.pipeline().addLast(new AESDecoder(aes));
             ch.pipeline().addLast(new ReadTimeoutHandler(30));
             ch.pipeline().addLast(new PacketDecoder(false));
             ch.pipeline().addLast(new Varint21LengthFieldPrepender());
+            ch.pipeline().addLast(new AESEncoder(aes));
             ch.pipeline().addLast(new PacketEncoder(true));
             ch.pipeline().addLast(new PacketHandler(new ClientPacketHandler(Convey.this)));
         }
@@ -134,13 +149,7 @@ public class Convey extends JavaPlugin {
                 getLogger().log(Level.SEVERE, "Could not load custom messages.properties", ex);
             }
         }
-        ResourceBundle baseBundle;
-        try {
-            baseBundle = ResourceBundle.getBundle("messages");
-        } catch (MissingResourceException ex) {
-            ex.printStackTrace();
-            baseBundle = ResourceBundle.getBundle("messages", Locale.ENGLISH);
-        }
+        ResourceBundle baseBundle = ResourceBundle.getBundle("messages");
         cacheResourceBundle(cachedFormats, baseBundle);
         messageFormats = Collections.unmodifiableMap(cachedFormats);
     }

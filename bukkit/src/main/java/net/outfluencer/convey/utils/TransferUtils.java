@@ -49,11 +49,11 @@ public class TransferUtils {
             internalCookie.setForServer(server.getName());
             internalCookie.setCreationTime(creationTime);
             allCookies.add(internalCookie.getCookieName());
-            CookieUtil.store(bukkitPlayer, internalCookie);
+            convey.getCookieUtil().store(bukkitPlayer, internalCookie);
         });
 
         verifyCookie.setClientCookies(allCookies);
-        CookieUtil.store(bukkitPlayer, verifyCookie);
+        convey.getCookieUtil().store(bukkitPlayer, verifyCookie);
 
         bukkitPlayer.transfer(server.getHostname(), server.getPort());
         convey.getServer().getScheduler().scheduleSyncDelayedTask(convey, () -> {

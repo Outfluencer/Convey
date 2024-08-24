@@ -22,20 +22,20 @@ public class CookieUtil {
 
 
     @SneakyThrows
-    public static void store(Player player, CookieUtil.VerifyCookie verifyCookie) {
+    public void store(Player player, CookieUtil.VerifyCookie verifyCookie) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         verifyCookie.write(dataOutputStream);
-        byte[] encrypted = AESUtils.encrypt(byteArrayOutputStream.toByteArray(), Convey.getInstance().getSecretKey());
+        byte[] encrypted = Convey.getInstance().getAesUtils().encrypt(byteArrayOutputStream.toByteArray());
         player.storeCookie(CookieUtil.VERIFY_COOKIE, encrypted);
     }
 
     @SneakyThrows
-    public static void store(Player player, CookieUtil.InternalCookie internalCookie) {
+    public void store(Player player, CookieUtil.InternalCookie internalCookie) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         internalCookie.write(dataOutputStream);
-        byte[] encrypted = AESUtils.encrypt(byteArrayOutputStream.toByteArray(), Convey.getInstance().getSecretKey());
+        byte[] encrypted = Convey.getInstance().getAesUtils().encrypt(byteArrayOutputStream.toByteArray());
         player.storeCookie(NamespacedKey.fromString(internalCookie.getCookieName()), encrypted);
     }
 

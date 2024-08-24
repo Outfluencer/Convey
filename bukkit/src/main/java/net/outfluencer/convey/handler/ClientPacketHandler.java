@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.outfluencer.convey.Convey;
 import net.outfluencer.convey.api.Server;
+import net.outfluencer.convey.api.UserData;
 import net.outfluencer.convey.protocol.AbstractPacketHandler;
 import net.outfluencer.convey.protocol.packets.HelloPacket;
 import net.outfluencer.convey.protocol.packets.PingPacket;
@@ -13,6 +14,7 @@ import net.outfluencer.convey.protocol.packets.ServerInfoPacket;
 import org.bukkit.Bukkit;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +23,7 @@ public class ClientPacketHandler extends AbstractPacketHandler {
 
     private final Convey convey;
 
+    @Getter
     private Channel channel;
 
     public boolean isActive() {
@@ -28,6 +31,7 @@ public class ClientPacketHandler extends AbstractPacketHandler {
     }
 
     private ScheduledFuture<?> keepAliveSchedule;
+
     private PingPacket lastPingPacket;
     @Getter
     long ping = -1;
@@ -55,7 +59,8 @@ public class ClientPacketHandler extends AbstractPacketHandler {
     public void connected(Channel channel) {
         this.channel = channel;
         convey.setMaster(this);
-        channel.writeAndFlush(new HelloPacket("213r7t6f432e6tfzg28796rt726wtgfd7869g786G/&TG/rfw3g7fgw7rf762wrf72w9783df2qw%&", Bukkit.getPort()));
+        channel.writeAndFlush(new HelloPacket(Bukkit.getPort(), Bukkit.getOnlinePlayers().stream().map(player ->
+                new UserData(player.getName(), player.getUniqueId())).toList()));
         keepAliveSchedule();
         convey.getLogger().info("Connected to master server");
     }
@@ -64,7 +69,8 @@ public class ClientPacketHandler extends AbstractPacketHandler {
     public void handle(ServerInfoPacket serverInfoPacket) {
         Map<String, Server> servers = new HashMap<>();
         serverInfoPacket.getServerInfo().forEach(host -> {
-            Server server = new Server(host.getName(), host.getAddress(), host.isRequiresPermission(), host.isJoinDirectly(), host.isFallbackServer());
+            List<UserData> list = host.getConnectedUsers().stream().map(user -> new UserData(user.getUsername(), user.getUuid())).toList();
+            Server server = new Server(host.getName(), host.getAddress(), host.isRequiresPermission(), host.isJoinDirectly(), host.isFallbackServer(), list);
             servers.put(server.getName(), server);
             if (host.getName().equals(serverInfoPacket.getYourName())) {
                 convey.setConveyServer(server);
