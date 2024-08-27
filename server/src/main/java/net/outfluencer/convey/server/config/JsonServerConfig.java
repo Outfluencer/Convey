@@ -3,13 +3,12 @@ package net.outfluencer.convey.server.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import net.outfluencer.convey.utils.AESUtils;
+import lombok.*;
+import net.outfluencer.convey.common.api.UserData;
+import net.outfluencer.convey.server.handler.ServerPacketHandler;
+import net.outfluencer.convey.common.utils.AESUtils;
 
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 @Data
 @AllArgsConstructor
@@ -29,7 +28,6 @@ public class JsonServerConfig {
 
 
     @Data
-    @AllArgsConstructor
     @NoArgsConstructor
     public class Host {
         @SerializedName("name")
@@ -42,6 +40,23 @@ public class JsonServerConfig {
         private boolean joinDirectly;
         @SerializedName("is-fallback-server")
         private boolean fallbackServer;
+
+
+        public Host(String name, String address, boolean requiresPermission, boolean joinDirectly, boolean fallbackServer) {
+            this.name = name;
+            this.address = address;
+            this.requiresPermission = requiresPermission;
+            this.joinDirectly = joinDirectly;
+            this.fallbackServer = fallbackServer;
+        }
+
+        private transient List<UserData> connectedUsers = new ArrayList<>();
+        private transient boolean connected = false;
+
+        @Getter
+        @Setter
+        private transient ServerPacketHandler packetHandler;
+
     }
 
     public String toString() {

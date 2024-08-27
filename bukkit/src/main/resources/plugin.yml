@@ -1,8 +1,9 @@
 name: Convey
-main: net.outfluencer.convey.Convey
+main: net.outfluencer.convey.bukkit.ConveyBukkit
 author: Outfluencer
 version: 1.0
 api-version: 1.21
 commands:
   convey:
   server:
+  glist:

@@ -25,6 +25,7 @@
         <module>server</module>
         <module>common</module>
         <module>bukkit</module>
+        <module>api</module>
     </modules>
 
     <properties>
