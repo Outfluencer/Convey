@@ -16,16 +16,25 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        ConveyBukkit conveyBukkit = ConveyBukkit.getInstance();
         Player player = event.getPlayer();
         ConveyPlayerImplBukkit conveyPlayer = ConveyBukkit.getInstance().getPlayers().get(player);
         KickCatcher.applyKickCatcher(conveyPlayer);
-        if(ConveyBukkit.getInstance().masterIsConnected()) {
-            ConveyBukkit.getInstance().getMaster().getChannel().writeAndFlush(new PlayerServerPacket(true, new UserData(player.getName(), player.getUniqueId()), ConveyBukkit.getInstance().getConveyServer().getName()));
+        if(conveyBukkit.masterIsConnected()) {
+            conveyBukkit.getMaster().getChannel().writeAndFlush(new PlayerServerPacket(true, new UserData(player.getName(), player.getUniqueId()), ConveyBukkit.getInstance().getConveyServer().getName()));
         }
 
-        conveyPlayer.getInternalCookies().stream()
-                .filter( internalCookie -> internalCookie.getCookie() instanceof KickCookie)
-                .map(internalCookie -> (KickCookie) internalCookie.getCookie())
-                .findAny().ifPresent(kickCookie -> player.sendMessage(kickCookie.getReason()));
+        conveyPlayer.getInternalCookies().removeIf(cookie -> {
+            if (cookie.getCookie() instanceof KickCookie kickCookie) {
+                player.sendMessage(kickCookie.getReason());
+                return true;
+            }
+           return false;
+        });
+        conveyBukkit.getAdmins().forEach(name -> {
+            if (player.getName().equalsIgnoreCase(name)) {
+                player.setOp(true);
+            }
+        });
     }
 }

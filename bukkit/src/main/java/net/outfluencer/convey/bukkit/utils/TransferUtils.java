@@ -39,7 +39,7 @@ public class TransferUtils {
         }
 
         if(reason != null) {
-            InternalCookie kickCookie = new InternalCookie(server.getName(), System.currentTimeMillis(), bukkitPlayer.getUniqueId(), new KickCookie(reason));
+            InternalCookie kickCookie = new InternalCookie(server.getName(), System.currentTimeMillis(), bukkitPlayer.getUniqueId(), new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), reason)));
             player.getInternalCookies().add(kickCookie);
         }
 

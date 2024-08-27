@@ -10,6 +10,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import lombok.Getter;
 import lombok.Setter;
+import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.bukkit.commands.ConveyCommand;
 import net.outfluencer.convey.bukkit.commands.GListCommand;
 import net.outfluencer.convey.bukkit.handler.ClientPacketHandler;
@@ -60,6 +61,9 @@ public class ConveyBukkit extends JavaPlugin {
     @Getter
     private AESUtils aesUtils;
     private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    @Getter
+    @Setter
+    private List<String> admins = new ArrayList<>();
 
     public boolean masterIsConnected() {
         return master != null && master.isActive();
@@ -69,6 +73,7 @@ public class ConveyBukkit extends JavaPlugin {
     public void onEnable() {
 
         // preload
+        CookieRegistry.VERIFY_COOKIE.length();
         KickCatcher.VERSION.length();
 
         saveDefaultConfig();

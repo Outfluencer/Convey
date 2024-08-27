@@ -44,5 +44,4 @@ public class InternalCookie extends AbstractCookie {
     public String getCookieName() {
         return cookie.getCookieName();
     }
-
 }

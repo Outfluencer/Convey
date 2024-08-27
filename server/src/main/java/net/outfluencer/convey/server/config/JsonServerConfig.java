@@ -23,8 +23,11 @@ public class JsonServerConfig {
     @SerializedName("encryption-key")
     public String encryptionKey = Base64.getEncoder().encodeToString(AESUtils.generateKey().getEncoded());
 
-    @SerializedName("hosts")
+    @SerializedName(value = "hosts")
     public List<Host> hosts = List.of(new Host("lobby-1", "157.90.241.237:25565", false, true, true), new Host("lobby-2", "157.90.241.237:25566", false, true, true));
+
+    @SerializedName("admin-users")
+    public List<String> admins = List.of("Outfluencer");
 
 
     @Data

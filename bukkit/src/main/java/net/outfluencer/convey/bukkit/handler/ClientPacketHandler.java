@@ -8,10 +8,7 @@ import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.common.api.Server;
 import net.outfluencer.convey.common.api.UserData;
 import net.outfluencer.convey.common.protocol.AbstractPacketHandler;
-import net.outfluencer.convey.common.protocol.packets.HelloPacket;
-import net.outfluencer.convey.common.protocol.packets.PingPacket;
-import net.outfluencer.convey.common.protocol.packets.PlayerServerPacket;
-import net.outfluencer.convey.common.protocol.packets.ServerInfoPacket;
+import net.outfluencer.convey.common.protocol.packets.*;
 import org.bukkit.Bukkit;
 
 import java.util.HashMap;
@@ -87,6 +84,11 @@ public class ClientPacketHandler extends AbstractPacketHandler {
         } else {
             server.getConnectedUsers().remove(playerServerPacket.getUserData());
         }
+    }
+
+    @Override
+    public void handle(AdminUsersPacket playerServerPacket) {
+        ConveyBukkit.getInstance().setAdmins(playerServerPacket.getUsers());
     }
 
     @Override

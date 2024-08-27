@@ -13,14 +13,14 @@ import org.bukkit.entity.Player;
 import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.util.ArrayList;
 import java.util.UUID;
 
 @Data
 public class ConveyPlayerImplBukkit implements ConveyPlayer {
 
     // this list need tp be mutable
-    private ArrayList<InternalCookie> internalCookies = new ArrayList<>();
+    private CookieCache internalCookies;
+
     private VerifyCookie verifyCookie;
     private final Player player;
     private boolean transferred;

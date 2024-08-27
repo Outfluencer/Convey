@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.outfluencer.convey.common.api.Server;
 import net.outfluencer.convey.common.protocol.AbstractPacketHandler;
-import net.outfluencer.convey.common.protocol.packets.HelloPacket;
-import net.outfluencer.convey.common.protocol.packets.PingPacket;
-import net.outfluencer.convey.common.protocol.packets.PlayerServerPacket;
-import net.outfluencer.convey.common.protocol.packets.ServerInfoPacket;
+import net.outfluencer.convey.common.protocol.packets.*;
 import net.outfluencer.convey.server.Convey;
 import net.outfluencer.convey.server.config.JsonServerConfig;
 
@@ -68,6 +65,13 @@ public class ServerPacketHandler extends AbstractPacketHandler {
 
         ServerInfoPacket serverInfoPacket = new ServerInfoPacket(serverInfos, this.currentHost.getName());
         channel.writeAndFlush(serverInfoPacket).addListener(future -> {
+            if (!future.isSuccess()) {
+                future.cause().printStackTrace();
+            }
+        });
+
+        AdminUsersPacket adminUsersPacket = new AdminUsersPacket(config.getAdmins());
+        channel.writeAndFlush(adminUsersPacket).addListener(future -> {
             if (!future.isSuccess()) {
                 future.cause().printStackTrace();
             }

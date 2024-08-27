@@ -39,7 +39,7 @@ public class PacketRegistry {
                 HelloPacket::new, PingPacket::new, PlayerServerPacket::new
         };
         TO_CLIENT = new Supplier[]{
-                ServerInfoPacket::new, PingPacket::new, PlayerServerPacket::new
+                ServerInfoPacket::new, PingPacket::new, PlayerServerPacket::new, AdminUsersPacket::new
         };
 
         for (int i = 0; i < TO_SERVER.length; i++) {

@@ -12,13 +12,15 @@ public class CookieRegistry {
     public static final String FALLBACK_MESSAGE = "convey:fallback_message";
 
     static {
+        COOKIE_NAME_MAP = new HashMap<>();
+        COOKIE_CREATION_MAP = new HashMap<>();
         registerCookie(KickCookie.class, KickCookie::new);
         registerCookie(VerifyCookie.class, VerifyCookie::new);
     }
 
-    private static final Map<Class<? extends AbstractCookie>, String> COOKIE_NAME_MAP = new HashMap<>();
+    private static final Map<Class<? extends AbstractCookie>, String> COOKIE_NAME_MAP;
 
-    private static final Map<String, Supplier<? extends AbstractCookie>> COOKIE_CREATION_MAP = new HashMap<>();
+    private static final Map<String, Supplier<? extends AbstractCookie>> COOKIE_CREATION_MAP;
 
     public static void registerCookie(Class<? extends AbstractCookie> clazz, Supplier<? extends AbstractCookie> creator) {
         AbstractCookie cookie = creator.get();

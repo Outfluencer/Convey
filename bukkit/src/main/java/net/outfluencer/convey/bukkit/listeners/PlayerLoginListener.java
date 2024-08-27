@@ -8,6 +8,7 @@ import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
+import net.outfluencer.convey.bukkit.impl.CookieCache;
 import net.outfluencer.convey.bukkit.utils.KickCatcher;
 import net.outfluencer.convey.common.api.Server;
 import org.bukkit.Bukkit;
@@ -53,7 +54,7 @@ public class PlayerLoginListener implements Listener {
 
         if (!player.isTransferred()) {
             if (server != null && server.isJoinDirectly()) {
-                postCookies(conveyPlayer, null, Arrays.asList());
+                postCookies(conveyPlayer, null, null);
                 return;
             }
             event.disallow(PlayerLoginEvent.Result.KICK_OTHER, convey.getTranslation("trusted-server-required"));
@@ -65,7 +66,7 @@ public class PlayerLoginListener implements Listener {
             try {
                 if(server.isJoinDirectly() && data == null) {
                     // bypass because we can join directly
-                    postCookies(conveyPlayer, null, Arrays.asList());
+                    postCookies(conveyPlayer, null, null);
                     return;
                 }
                 Preconditions.checkState(data != null && data.length > 0, "empty cookie");
@@ -85,7 +86,7 @@ public class PlayerLoginListener implements Listener {
                 Preconditions.checkState(convey.getConveyServer() != null && verifyCookie.getForServer().equals(convey.getConveyServer().getName()), "cookie not for current server");
 
                 if (verifyCookie.getClientCookies().isEmpty()) {
-                    postCookies(conveyPlayer, verifyCookie, Arrays.asList());
+                    postCookies(conveyPlayer, verifyCookie, null);
                     return;
                 }
 
@@ -103,9 +104,10 @@ public class PlayerLoginListener implements Listener {
                             // valid cookie
                             internalCookies.add(internalCookie);
                             if (amt.decrementAndGet() == 0) {
-                                postCookies(conveyPlayer, verifyCookie, new ArrayList<>(internalCookies));
+                                postCookies(conveyPlayer, verifyCookie, new CookieCache(internalCookies));
                             }
                         } catch (Throwable throwable) {
+                            throwable.printStackTrace();
                             player.kickPlayer(convey.getTranslation("invalid-cookie", throwable));
                         }
 
@@ -119,9 +121,9 @@ public class PlayerLoginListener implements Listener {
         });
     }
 
-    public void postCookies(ConveyPlayerImplBukkit conveyPlayer, VerifyCookie verifyCookie, List<InternalCookie> internalCookies) {
+    public void postCookies(ConveyPlayerImplBukkit conveyPlayer, VerifyCookie verifyCookie, CookieCache internalCookies) {
         conveyPlayer.setVerifyCookie(verifyCookie);
-        conveyPlayer.setInternalCookies(new ArrayList<>(internalCookies));
+        conveyPlayer.setInternalCookies(internalCookies == null ? new CookieCache() : internalCookies);
         ConveyBukkit.getInstance().getPlayers().put(conveyPlayer.getPlayer(), conveyPlayer);
     }
 

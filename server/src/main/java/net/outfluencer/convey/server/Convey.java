@@ -52,11 +52,11 @@ public class Convey {
             config = JsonServerConfig.gson.fromJson(new FileReader(f), JsonServerConfig.class);
         } else {
             config = new JsonServerConfig();
-            FileWriter writer = new FileWriter(f);
-            writer.write(JsonServerConfig.gson.toJson(config));
-            writer.flush();
-            writer.close();
         }
+        FileWriter writer = new FileWriter(f);
+        writer.write(JsonServerConfig.gson.toJson(config));
+        writer.flush();
+        writer.close();
         Map<String, JsonServerConfig.Host> serverInfos = new HashMap<>();
         config.getHosts().forEach(host -> serverInfos.put(host.getName(), host));
         this.serverInfos = serverInfos;

@@ -9,6 +9,7 @@ import lombok.SneakyThrows;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
+import net.outfluencer.convey.api.cookie.builtint.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
 import net.outfluencer.convey.common.api.Server;
@@ -73,6 +74,7 @@ public class KickCatcher {
 
     @SneakyThrows
     public static void applyKickCatcher(ConveyPlayerImplBukkit player) {
+        ConveyBukkit convey = ConveyBukkit.getInstance();
         Player bukkitPlayer = player.getPlayer();
         Object entityPlayer = getHandleMethod.invoke(bukkitPlayer);
         Object serverCommonPacketListenerImpl = playerConnectionField.get(entityPlayer);
@@ -86,6 +88,9 @@ public class KickCatcher {
             protected void encode(ChannelHandlerContext channelHandlerContext, Object o, List<Object> list) {
                 if (kickPacketClass.isInstance(o)) {
                     Server fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
+
+                    player.getInternalCookies().add(new InternalCookie(fallback.getName(), System.currentTimeMillis(), bukkitPlayer.getUniqueId(), new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), "catched " + o))));
+
                     VerifyCookie verifyCookie = new VerifyCookie();
 
                     long creationTime = System.currentTimeMillis();
