@@ -1,3 +1,5 @@
+Connects multiple minecraft servers via master server, cookie packets and transfers
+
 Contributions are welcome, we aim to provide bukkit, bungeecord and velocity support at first.
 
 This software is still work in progress.
