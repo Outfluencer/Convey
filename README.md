@@ -1,5 +1,10 @@
-Fast and secure.
+Contributions are welcome, we aim to provide bukkit, bungeecord and velocity support at first.
 
-WIP
+This software is still work in progress.
 
-Todo: use https://hub.spigotmc.org/stash/projects/SPIGOT/repos/plugin-annotations/browse for bukkit impl
+This software aims to provide a minecraft server network functionallity utilizing the transfer and cookie packets to create a fast and secure way of data transfer and transfer of players to different servers.
+
+You first need to start the server and copy the secret key from the server config into all plugin configs of the minecraft servers.
+Do not share this secret key!
+
+IF YOU LEAKED THE KEY, PLEASE REMOVE THE KEY FROM THE MASTER SERVER CONFIG AND GENERATE A NEW ONE. (BY RESTARTING CONVEY)
