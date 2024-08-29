@@ -1,8 +1,8 @@
 package net.outfluencer.convey.bukkit.commands;
 
 import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.outfluencer.convey.api.player.ConveyPlayer;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
-import net.outfluencer.convey.common.api.UserData;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -27,8 +27,9 @@ public class GListCommand implements TabExecutor {
                     .append(String.valueOf(server.getConnectedUsers().size()))
                     .append("): ");
             boolean first = true;
-            for (UserData connectedUser : server.getConnectedUsers()) {
-                builder.append(first ? connectedUser.getUsername() : ", " + connectedUser.getUsername());
+            for (ConveyPlayer connectedUser : server.getConnectedUsers()) {
+                builder.append(first ? connectedUser.getName() : ", " + connectedUser.getName());
+                first = false;
             }
         });
         sender.spigot().sendMessage(builder.create());

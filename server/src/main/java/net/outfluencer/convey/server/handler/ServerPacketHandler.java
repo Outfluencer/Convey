@@ -5,7 +5,7 @@ import io.netty.channel.Channel;
 import io.netty.util.concurrent.ScheduledFuture;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.outfluencer.convey.common.api.Server;
+import net.outfluencer.convey.common.api.CommonServer;
 import net.outfluencer.convey.common.protocol.AbstractPacketHandler;
 import net.outfluencer.convey.common.protocol.packets.*;
 import net.outfluencer.convey.server.Convey;
@@ -44,10 +44,10 @@ public class ServerPacketHandler extends AbstractPacketHandler {
 
         JsonServerConfig config = convey.getConfig();
         String hostAddress = ((InetSocketAddress) channel.remoteAddress()).getAddress().getHostAddress();
-        List<Server> serverInfos = new ArrayList<>();
+        List<CommonServer> serverInfos = new ArrayList<>();
         for (JsonServerConfig.Host host : config.hosts) {
-            if(host.getConnectedUsers() == null) host.setConnectedUsers(new ArrayList<>());
-            serverInfos.add(new Server(host.getName(),
+            if (host.getConnectedUsers() == null) host.setConnectedUsers(new ArrayList<>());
+            serverInfos.add(new CommonServer(host.getName(),
                     host.getAddress(),
                     host.isRequiresPermission(),
                     host.isJoinDirectly(),
@@ -77,13 +77,13 @@ public class ServerPacketHandler extends AbstractPacketHandler {
             }
         });
         scheduledFuture = channel.eventLoop().scheduleAtFixedRate(() -> {
-            if(!channel.isActive()) {
+            if (!channel.isActive()) {
                 scheduledFuture.cancel(false);
                 return;
             }
-            List<Server> allServers = new ArrayList<>();
+            List<CommonServer> allServers = new ArrayList<>();
             for (JsonServerConfig.Host host : config.hosts) {
-                allServers.add(new Server(host.getName(),
+                allServers.add(new CommonServer(host.getName(),
                         host.getAddress(),
                         host.isRequiresPermission(),
                         host.isJoinDirectly(),
@@ -100,9 +100,25 @@ public class ServerPacketHandler extends AbstractPacketHandler {
     public void disconnected(Channel channel) {
         currentHost.getConnectedUsers().clear();
         currentHost.setConnected(false);
-        if(currentHost.getPacketHandler() == this) {
+        if (currentHost.getPacketHandler() == this) {
             currentHost.setPacketHandler(null);
         }
+        ServerSyncPacket serverSyncPacket = new ServerSyncPacket(currentHost.getName(), true, false, List.of());
+        Convey.getConvey().getServerInfos().values().forEach(host -> {
+            if (host.getPacketHandler() != null && host.getPacketHandler().isConnected()) {
+                host.getPacketHandler().channel.writeAndFlush(serverSyncPacket);
+            }
+        });
+    }
+
+    @Override
+    public void handle(ServerSyncPacket serverDisconnectedPacket) {
+        serverDisconnectedPacket.setServer(currentHost.getName());
+        Convey.getConvey().getServerInfos().values().forEach(host -> {
+            if (host.isActive()) {
+                host.getPacketHandler().channel.writeAndFlush(serverDisconnectedPacket);
+            }
+        });
     }
 
     @Override
@@ -119,10 +135,9 @@ public class ServerPacketHandler extends AbstractPacketHandler {
             host.getConnectedUsers().remove(playerServerPacket.getUserData());
         }
 
-        convey.getServerInfos().values().forEach( h -> {
-            ServerPacketHandler packetHandler = h.getPacketHandler();
-            if(packetHandler != null && packetHandler.isConnected()) {
-                packetHandler.channel.writeAndFlush(playerServerPacket);
+        convey.getServerInfos().values().forEach(h -> {
+            if (h.isActive()) {
+                h.getPacketHandler().channel.writeAndFlush(playerServerPacket);
             }
         });
     }

@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import net.outfluencer.convey.common.api.Server;
+import net.outfluencer.convey.common.api.CommonServer;
 import net.outfluencer.convey.common.protocol.AbstractPacketHandler;
 import net.outfluencer.convey.common.api.UserData;
 
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ServerInfoPacket extends AbstractPacket {
 
-    private List<Server> serverInfo;
+    private List<CommonServer> serverInfo;
     private String yourName;
 
     @Override
@@ -37,7 +37,7 @@ public class ServerInfoPacket extends AbstractPacket {
                 users.add(userData);
             }
             boolean online = buf.readBoolean();
-            serverInfo.add(new Server(name, address, requiresPermission, joinDirectly, fallbackServer, users, online));
+            serverInfo.add(new CommonServer(name, address, requiresPermission, joinDirectly, fallbackServer, users, online));
         }
         yourName = readString(buf);
     }
@@ -48,12 +48,12 @@ public class ServerInfoPacket extends AbstractPacket {
         serverInfo.forEach(host -> {
             writeString(host.getName(), buf);
             writeString(host.getAddress(), buf);
-            buf.writeBoolean(host.isRequiresPermission());
+            buf.writeBoolean(host.isPermissionRequired());
             buf.writeBoolean(host.isJoinDirectly());
             buf.writeBoolean(host.isFallbackServer());
 
-            writeVarInt(host.getConnectedUsers().size(), buf);
-            host.getConnectedUsers().forEach(user -> user.write(buf));
+            writeVarInt(host.getUserData().size(), buf);
+            host.getUserData().forEach(user -> user.write(buf));
             buf.writeBoolean(host.isOnline());
         });
         writeString(yourName, buf);

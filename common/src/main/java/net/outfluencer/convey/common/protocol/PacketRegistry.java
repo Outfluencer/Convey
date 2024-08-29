@@ -36,10 +36,10 @@ public class PacketRegistry {
 
     static {
         TO_SERVER = new Supplier[]{
-                HelloPacket::new, PingPacket::new, PlayerServerPacket::new
+                HelloPacket::new, PingPacket::new, PlayerServerPacket::new, ServerSyncPacket::new
         };
         TO_CLIENT = new Supplier[]{
-                ServerInfoPacket::new, PingPacket::new, PlayerServerPacket::new, AdminUsersPacket::new
+                ServerInfoPacket::new, PingPacket::new, PlayerServerPacket::new, AdminUsersPacket::new, SendMessageToPlayerPacket::new, ServerSyncPacket::new
         };
 
         for (int i = 0; i < TO_SERVER.length; i++) {

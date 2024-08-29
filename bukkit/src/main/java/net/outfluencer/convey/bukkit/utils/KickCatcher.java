@@ -1,18 +1,19 @@
 package net.outfluencer.convey.bukkit.utils;
 
-import com.google.common.base.Preconditions;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import lombok.SneakyThrows;
+import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
+import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
 import net.outfluencer.convey.api.cookie.builtint.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
-import net.outfluencer.convey.common.api.Server;
+import net.outfluencer.convey.bukkit.impl.ServerImplBukkit;
 import org.bukkit.entity.Player;
 
 import java.io.ByteArrayOutputStream;
@@ -22,6 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class KickCatcher {
@@ -72,27 +74,38 @@ public class KickCatcher {
         }
     }
 
+    /*
+     * WARNING: DON'T USE INNER CLASSES IN THIS METHOD THAT IS CONTAINING BUKKIT CODE
+     * THE CLASSLOADER WILL NOT FIND THE CLASSES
+     * IF THE SERVER IS CLOSED
+     */
+
     @SneakyThrows
     public static void applyKickCatcher(ConveyPlayerImplBukkit player) {
         ConveyBukkit convey = ConveyBukkit.getInstance();
         Player bukkitPlayer = player.getPlayer();
+        UUID uuid = bukkitPlayer.getUniqueId();
         Object entityPlayer = getHandleMethod.invoke(bukkitPlayer);
         Object serverCommonPacketListenerImpl = playerConnectionField.get(entityPlayer);
         Object networkManager = networkManagerField.get(serverCommonPacketListenerImpl);
         Channel channel = (Channel) channelField.get(networkManager);
         channel.pipeline().addAfter("encoder", "kick-catcher", new MessageToMessageEncoder<>() {
 
-            boolean hasSentTransfer = true;
+            // sorry that's even more hacky than the trash below in the close
+            // maybe md5 will add an server close event soon
+            VerifyCookie verifyCookie = new VerifyCookie();
+            InternalCookie internalCookie = new InternalCookie();
+            Server fallback = new ServerImplBukkit(null, null, false, false, null, 0, false, List.of(), false);
+            KickCookie kickCookie = new KickCookie();
 
             @Override
             protected void encode(ChannelHandlerContext channelHandlerContext, Object o, List<Object> list) {
                 if (kickPacketClass.isInstance(o)) {
-                    Server fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
+                    fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
 
-                    player.getInternalCookies().add(new InternalCookie(fallback.getName(), System.currentTimeMillis(), bukkitPlayer.getUniqueId(), new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), "catched " + o))));
+                    player.getCookieCache().add(kickCookie = new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), "catched " + o)));
 
-                    VerifyCookie verifyCookie = new VerifyCookie();
-
+                    verifyCookie = new VerifyCookie();
                     long creationTime = System.currentTimeMillis();
                     verifyCookie.setUuid(bukkitPlayer.getUniqueId());
                     verifyCookie.setFromServer(ConveyBukkit.getInstance().getConveyServer().getName());
@@ -100,13 +113,11 @@ public class KickCatcher {
                     verifyCookie.setForServer(fallback.getName());
 
                     List<String> allCookies = new ArrayList<>();
-                    player.getInternalCookies().forEach(internalCookie -> {
-                        Preconditions.checkState(internalCookie.getUuid().equals(bukkitPlayer.getUniqueId()), "invalid uuid");
-                        internalCookie.setForServer(fallback.getName());
-                        internalCookie.setCreationTime(creationTime);
+                    for (FriendlyCookie cookie : player.getCookieCache()) {
+                        internalCookie = new InternalCookie(fallback.getName(), creationTime, uuid, cookie);
                         allCookies.add(internalCookie.getCookieName());
                         list.add(createCookieStorePacket(internalCookie.getCookieName(), parseInternalCookie(internalCookie)));
-                    });
+                    }
 
                     verifyCookie.setClientCookies(allCookies);
                     list.add(createCookieStorePacket(CookieRegistry.VERIFY_COOKIE, parseVerifyCookie(verifyCookie)));
@@ -121,18 +132,17 @@ public class KickCatcher {
             // sorry thats hacky, we bassicly schedule the close on the pipeline to ensure the transfer will apply
             @Override
             public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-                if (!hasSentTransfer) {
-                    // also send the packets
-                }
+                System.out.println("close queue");
+
                 ctx.executor().schedule(() -> {
                     try {
+                        System.out.println("close queue");
                         super.close(ctx, promise);
+                        System.out.println("closed!");
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new IllegalStateException(e);
                     }
-                }, 1, TimeUnit.SECONDS);
-
-
+                }, 2, TimeUnit.SECONDS);
             }
         });
     }

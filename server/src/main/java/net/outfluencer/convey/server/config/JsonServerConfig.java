@@ -60,6 +60,10 @@ public class JsonServerConfig {
         @Setter
         private transient ServerPacketHandler packetHandler;
 
+        public boolean isActive() {
+            return packetHandler != null && packetHandler.isConnected();
+        }
+
     }
 
     public String toString() {

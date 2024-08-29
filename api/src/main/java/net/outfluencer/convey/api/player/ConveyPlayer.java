@@ -1,5 +1,8 @@
 package net.outfluencer.convey.api.player;
 
+import net.outfluencer.convey.api.Server;
+import net.outfluencer.convey.api.cookie.InternalCookie;
+
 import java.util.UUID;
 
 public interface ConveyPlayer {
@@ -14,14 +17,12 @@ public interface ConveyPlayer {
      */
     UUID getUniqueId();
 
-    /*
-     * Get if the player is transferred
-     */
-    boolean isTransferred();
+    void connect(Server server);
+
+    void sendMessage(String message);
 
     /*
-     * Get the server name of the server the player was transferred from to this server
+     * Gets the local player instance of this player if possible
      */
-    String getLastServer();
-
+    LocalConveyPlayer getLocalPlayer();
 }

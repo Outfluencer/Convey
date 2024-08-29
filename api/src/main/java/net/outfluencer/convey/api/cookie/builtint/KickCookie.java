@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import net.outfluencer.convey.api.cookie.AbstractCookie;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
 
 import java.io.DataInputStream;
@@ -14,7 +13,7 @@ import java.io.IOException;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class KickCookie extends AbstractCookie {
+public class KickCookie extends FriendlyCookie {
 
     private String reason;
 

@@ -4,8 +4,8 @@ import com.google.common.collect.Iterables;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
-import net.outfluencer.convey.common.api.Server;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -29,7 +29,7 @@ public class ServerCommand implements TabExecutor {
             ComponentBuilder builder = new ComponentBuilder("Servers you may connect to: ");
             boolean first = true;
             for (Server server : convey.getServers().values()) {
-                if (!server.isRequiresPermission() || sender.hasPermission(server.getJoinPermission())) {
+                if (!server.isPermissionRequired() || sender.hasPermission(server.getJoinPermission())) {
                     TextComponent component = new TextComponent(first ? server.getName() : ", " + server.getName());
                     component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/server " + server.getName()));
                     builder.append(component);
@@ -43,7 +43,7 @@ public class ServerCommand implements TabExecutor {
             return true;
         }
         Server server = convey.getServers().get(args[0]);
-        convey.getTransferUtils().transferPlayer(convey.getPlayers().get(player), server, true, null);
+        convey.getTransferUtils().transferPlayer(convey.getPlayerMap().get(player), server, true, null);
         return true;
     }
 
@@ -53,7 +53,7 @@ public class ServerCommand implements TabExecutor {
         ArrayList<String> list = new ArrayList();
         Iterables.transform(Iterables.filter(ConveyBukkit.getInstance().getServers().values(), input ->
                         input.getName().toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT)) &&
-                                (!input.isRequiresPermission() || sender.hasPermission(input.getJoinPermission()))),
+                                (!input.isPermissionRequired() || sender.hasPermission(input.getJoinPermission()))),
                 input -> input.getName()).forEach(list::add);
         return list;
     }

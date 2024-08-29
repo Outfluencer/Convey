@@ -14,7 +14,7 @@ public class PlayerQuitListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         ConveyBukkit convey = ConveyBukkit.getInstance();
         Player player = event.getPlayer();
-        convey.getPlayers().remove(player);
+        convey.getPlayerMap().remove(player);
         if (convey.masterIsConnected()) {
             convey.getMaster().getChannel().writeAndFlush(new PlayerServerPacket(false, new UserData(player.getName(), player.getUniqueId()), convey.getConveyServer().getName()));
         }

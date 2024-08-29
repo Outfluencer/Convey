@@ -1,7 +1,7 @@
 package net.outfluencer.convey.bukkit.commands;
 
+import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
-import net.outfluencer.convey.common.api.Server;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,7 +17,7 @@ public class ConveyCommand implements CommandExecutor {
         }
         sender.sendMessage(ChatColor.BLUE + "Convey by Outfluencer, current server name " + convey.getConveyServer().getName());
         for (Server server : convey.getServers().values()) {
-            sender.sendMessage(ChatColor.BLUE + " - " + server.getName() + " " + server.getAddress() + " " + (server.isRequiresPermission() ? "Requires permission" : "No permission required"));
+            sender.sendMessage(ChatColor.BLUE + " - " + server);
         }
         if (convey.masterIsConnected()) {
             sender.sendMessage(ChatColor.BLUE + "Master is connected with last ping " + convey.getMaster().getPing() + "ms");

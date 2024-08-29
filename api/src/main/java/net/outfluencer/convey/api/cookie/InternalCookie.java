@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -18,7 +19,7 @@ public class InternalCookie extends AbstractCookie {
     private String forServer;
     private long creationTime;
     private UUID uuid;
-    private AbstractCookie cookie;
+    private FriendlyCookie cookie;
 
     @SneakyThrows
     @Override

@@ -1,6 +1,5 @@
 package net.outfluencer.convey.bukkit.listeners;
 
-import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.cookie.builtint.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
@@ -18,14 +17,14 @@ public class PlayerJoinListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         ConveyBukkit conveyBukkit = ConveyBukkit.getInstance();
         Player player = event.getPlayer();
-        ConveyPlayerImplBukkit conveyPlayer = ConveyBukkit.getInstance().getPlayers().get(player);
+        ConveyPlayerImplBukkit conveyPlayer = ConveyBukkit.getInstance().getPlayerMap().get(player);
         KickCatcher.applyKickCatcher(conveyPlayer);
         if(conveyBukkit.masterIsConnected()) {
             conveyBukkit.getMaster().getChannel().writeAndFlush(new PlayerServerPacket(true, new UserData(player.getName(), player.getUniqueId()), ConveyBukkit.getInstance().getConveyServer().getName()));
         }
 
-        conveyPlayer.getInternalCookies().removeIf(cookie -> {
-            if (cookie.getCookie() instanceof KickCookie kickCookie) {
+        conveyPlayer.getCookieCache().removeIf(cookie -> {
+            if (cookie instanceof KickCookie kickCookie) {
                 player.sendMessage(kickCookie.getReason());
                 return true;
             }

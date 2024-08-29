@@ -25,4 +25,11 @@ public class AbstractPacketHandler {
 
     public void handle(AdminUsersPacket playerServerPacket) {
     }
+
+    public void handle(SendMessageToPlayerPacket sendMessageToPlayerPacket) {
+    }
+
+    public void handle(ServerSyncPacket serverDisconnectedPacket) {
+
+    }
 }

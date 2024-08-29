@@ -23,7 +23,13 @@ public class PacketDecoder extends MessageToMessageDecoder<ByteBuf> {
         }
         AbstractPacket packet = PacketRegistry.createPacket(AbstractPacket.readVarInt(buf), toServer);
         packet.read(buf);
+        System.out.println("PacketDecoder: " + packet);
         out.add(packet);
-        System.out.println(packet);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        super.exceptionCaught(ctx, cause);
+        cause.printStackTrace();
     }
 }

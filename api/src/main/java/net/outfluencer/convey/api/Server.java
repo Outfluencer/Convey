@@ -7,13 +7,17 @@ import java.util.List;
 public interface Server {
 
     String getName();
+
     String getAddress();
 
-    boolean requiresPermission();
-    boolean canJoinDirectly();
+    boolean isPermissionRequired();
+
+    boolean isDirectJoinAllowed();
+
     boolean isFallbackServer();
 
     String getHostname();
+
     int getPort();
 
     List<ConveyPlayer> getConnectedUsers();
@@ -23,5 +27,6 @@ public interface Server {
     }
 
     boolean isConnected();
+
 
 }

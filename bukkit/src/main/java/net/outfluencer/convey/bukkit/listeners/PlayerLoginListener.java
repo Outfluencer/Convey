@@ -3,15 +3,14 @@ package net.outfluencer.convey.bukkit.listeners;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import net.outfluencer.convey.api.Server;
+import net.outfluencer.convey.api.cookie.CookieCache;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
+import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
-import net.outfluencer.convey.bukkit.impl.CookieCache;
-import net.outfluencer.convey.bukkit.utils.KickCatcher;
-import net.outfluencer.convey.common.api.Server;
-import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,8 +20,6 @@ import org.bukkit.event.player.PlayerLoginEvent;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -42,10 +39,9 @@ public class PlayerLoginListener implements Listener {
         ConveyBukkit convey = ConveyBukkit.getInstance();
 
         ConveyPlayerImplBukkit conveyPlayer = new ConveyPlayerImplBukkit(player);
-        conveyPlayer.setTransferred(player.isTransferred());
 
         Server server = convey.getConveyServer();
-        if(server.isRequiresPermission()){
+        if(server.isPermissionRequired()){
             if (!player.hasPermission(server.getJoinPermission())) {
                 event.disallow(PlayerLoginEvent.Result.KICK_OTHER, convey.getTranslation("join-permission-required", server.getJoinPermission()));
                 return;
@@ -53,7 +49,7 @@ public class PlayerLoginListener implements Listener {
         }
 
         if (!player.isTransferred()) {
-            if (server != null && server.isJoinDirectly()) {
+            if (server != null && server.isDirectJoinAllowed()) {
                 postCookies(conveyPlayer, null, null);
                 return;
             }
@@ -64,7 +60,7 @@ public class PlayerLoginListener implements Listener {
 
         player.retrieveCookie(NamespacedKey.fromString(CookieRegistry.VERIFY_COOKIE)).thenAccept(data -> {
             try {
-                if(server.isJoinDirectly() && data == null) {
+                if(server.isDirectJoinAllowed() && data == null) {
                     // bypass because we can join directly
                     postCookies(conveyPlayer, null, null);
                     return;
@@ -91,7 +87,7 @@ public class PlayerLoginListener implements Listener {
                 }
 
                 AtomicInteger amt = new AtomicInteger(verifyCookie.getClientCookies().size());
-                List<InternalCookie> internalCookies = new CopyOnWriteArrayList<>();
+                List<FriendlyCookie> cookies = new CopyOnWriteArrayList<>();
                 for (String clientCookie : verifyCookie.getClientCookies()) {
                     player.retrieveCookie(NamespacedKey.fromString(clientCookie)).thenAccept(d -> {
                         try {
@@ -102,9 +98,9 @@ public class PlayerLoginListener implements Listener {
                             Preconditions.checkState(internalCookie.getForServer().equals(verifyCookie.getForServer()), "invalid server");
                             Preconditions.checkState(internalCookie.getCreationTime() == verifyCookie.getCreationTime(), "not created at the same time");
                             // valid cookie
-                            internalCookies.add(internalCookie);
+                            cookies.add(internalCookie.getCookie());
                             if (amt.decrementAndGet() == 0) {
-                                postCookies(conveyPlayer, verifyCookie, new CookieCache(internalCookies));
+                                postCookies(conveyPlayer, verifyCookie, new CookieCache(cookies));
                             }
                         } catch (Throwable throwable) {
                             throwable.printStackTrace();
@@ -123,8 +119,8 @@ public class PlayerLoginListener implements Listener {
 
     public void postCookies(ConveyPlayerImplBukkit conveyPlayer, VerifyCookie verifyCookie, CookieCache internalCookies) {
         conveyPlayer.setVerifyCookie(verifyCookie);
-        conveyPlayer.setInternalCookies(internalCookies == null ? new CookieCache() : internalCookies);
-        ConveyBukkit.getInstance().getPlayers().put(conveyPlayer.getPlayer(), conveyPlayer);
+        conveyPlayer.setCookieCache(internalCookies == null ? new CookieCache() : internalCookies);
+        ConveyBukkit.getInstance().getPlayerMap().put(conveyPlayer.getPlayer(), conveyPlayer);
     }
 
 }

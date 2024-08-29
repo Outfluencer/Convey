@@ -10,7 +10,11 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import lombok.Getter;
 import lombok.Setter;
+import net.outfluencer.convey.api.Convey;
+import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
+import net.outfluencer.convey.api.player.ConveyPlayer;
+import net.outfluencer.convey.api.player.LocalConveyPlayer;
 import net.outfluencer.convey.bukkit.commands.ConveyCommand;
 import net.outfluencer.convey.bukkit.commands.GListCommand;
 import net.outfluencer.convey.bukkit.handler.ClientPacketHandler;
@@ -21,8 +25,8 @@ import net.outfluencer.convey.bukkit.listeners.PlayerLoginListener;
 import net.outfluencer.convey.bukkit.listeners.PlayerQuitListener;
 import net.outfluencer.convey.bukkit.utils.KickCatcher;
 import net.outfluencer.convey.bukkit.utils.TransferUtils;
-import net.outfluencer.convey.common.api.Server;
 import net.outfluencer.convey.bukkit.commands.ServerCommand;
+import net.outfluencer.convey.common.protocol.packets.AbstractPacket;
 import net.outfluencer.convey.common.protocol.pipe.*;
 import net.outfluencer.convey.common.utils.AESUtils;
 import org.bukkit.Bukkit;
@@ -36,14 +40,15 @@ import java.io.IOException;
 import java.text.Format;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
-public class ConveyBukkit extends JavaPlugin {
+public class ConveyBukkit extends JavaPlugin implements Convey {
 
     @Getter
     private static ConveyBukkit instance;
     @Getter
-    private final Map<Player, ConveyPlayerImplBukkit> players = new HashMap<>();
+    private final Map<Player, ConveyPlayerImplBukkit> playerMap = new HashMap<>();
     @Setter
     @Getter
     private ClientPacketHandler master;
@@ -65,8 +70,28 @@ public class ConveyBukkit extends JavaPlugin {
     @Setter
     private List<String> admins = new ArrayList<>();
 
+    @Override
+    public List<LocalConveyPlayer> getPlayers() {
+        Collection collection = playerMap.values();
+        return (List<LocalConveyPlayer>)List.copyOf(collection);
+    }
+
+    public List<ConveyPlayer> getNetworkPlayers() {
+        List<ConveyPlayer> list = new ArrayList<>();
+        servers.values().forEach(server -> list.addAll(server.getConnectedUsers()));
+        return List.copyOf(list);
+    }
+
     public boolean masterIsConnected() {
         return master != null && master.isActive();
+    }
+
+    public boolean sendIfConnected(Supplier<AbstractPacket> packet) {
+        if (masterIsConnected()) {
+            master.getChannel().writeAndFlush(packet.get());
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -107,7 +132,7 @@ public class ConveyBukkit extends JavaPlugin {
         getCommand("server").setExecutor(new ServerCommand());
         getCommand("glist").setExecutor(new GListCommand());
 
-        Bukkit.getOnlinePlayers().forEach(player -> players.put(player, new ConveyPlayerImplBukkit(player)));
+        Bukkit.getOnlinePlayers().forEach(player -> playerMap.put(player, new ConveyPlayerImplBukkit(player)));
     }
 
     @Override
@@ -177,7 +202,7 @@ public class ConveyBukkit extends JavaPlugin {
 
     public boolean fallback(Player player, String reason) {
         for (Server server : servers.values()) {
-            if(server.isFallbackServer() && transferUtils.transferPlayer(getPlayers().get(player), server, false, reason)) {
+            if(server.isFallbackServer() && transferUtils.transferPlayer(this.getPlayerMap().get(player), server, false, reason)) {
                 return true;
             }
         }
@@ -186,7 +211,7 @@ public class ConveyBukkit extends JavaPlugin {
     public Server fallbackServerName(Player player) {
         for (Server server : servers.values()) {
             if(server.isFallbackServer() && !server.getName().equals(getConveyServer().getName())) {
-                if(server.isRequiresPermission()) {
+                if(server.isPermissionRequired()) {
                     if (!player.hasPermission(server.getJoinPermission())) {
                         continue;
                     }

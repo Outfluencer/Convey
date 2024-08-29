@@ -13,17 +13,17 @@ import java.util.UUID;
 @NoArgsConstructor
 public class UserData {
 
-    private String username;
-    private UUID uuid;
+    private String name;
+    private UUID uniqueId;
 
     public void read(ByteBuf buf) {
-        username = AbstractPacket.readString(buf);
-        uuid = AbstractPacket.readUUID(buf);
+        name = AbstractPacket.readString(buf);
+        uniqueId = AbstractPacket.readUUID(buf);
     }
 
     public void write(ByteBuf buf) {
-        AbstractPacket.writeString(username, buf);
-        AbstractPacket.writeUUID(uuid, buf);
+        AbstractPacket.writeString(name, buf);
+        AbstractPacket.writeUUID(uniqueId, buf);
     }
 
 }
