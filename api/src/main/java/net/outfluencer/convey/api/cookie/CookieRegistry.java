@@ -1,5 +1,6 @@
 package net.outfluencer.convey.api.cookie;
 
+import lombok.SneakyThrows;
 import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
 import net.outfluencer.convey.api.cookie.builtint.KickCookie;
 
@@ -13,6 +14,13 @@ public class CookieRegistry {
     public static final String FALLBACK_MESSAGE = "convey:fallback_message";
 
     static {
+        try {
+            Class.forName(VerifyCookie.class.getName(), true, CookieRegistry.class.getClassLoader());
+            Class.forName(InternalCookie.class.getName(), true, CookieRegistry.class.getClassLoader());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         COOKIE_NAME_MAP = new HashMap<>();
         COOKIE_CREATION_MAP = new HashMap<>();
         registerCookie(KickCookie.class, KickCookie::new);

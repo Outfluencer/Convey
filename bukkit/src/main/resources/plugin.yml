@@ -1,5 +1,5 @@
 name: Convey
-main: net.outfluencer.convey.bukkit.ConveyBukkit
+main: net.outfluencer.convey.bukkit.ConveyBukkitPlugin
 author: Outfluencer
 version: 1.0
 api-version: 1.21

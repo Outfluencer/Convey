@@ -18,13 +18,13 @@ public class JsonServerConfig {
     public static final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     @SerializedName("bind")
-    public String bind = "157.90.241.237:21639";
+    public String bind = "127.0.0.1:21639";
 
     @SerializedName("encryption-key")
     public String encryptionKey = Base64.getEncoder().encodeToString(AESUtils.generateKey().getEncoded());
 
     @SerializedName(value = "hosts")
-    public List<Host> hosts = List.of(new Host("lobby-1", "157.90.241.237:25565", false, true, true), new Host("lobby-2", "157.90.241.237:25566", false, true, true));
+    public List<Host> hosts = List.of(new Host("lobby-1", "127.0.0.1:25565", false, true, true), new Host("lobby-2", "127.0.0.1:25566", false, true, true));
 
     @SerializedName("admin-users")
     public List<String> admins = List.of("Outfluencer");

@@ -30,7 +30,7 @@ public class ServerImplBukkit implements Server {
 
     public List<ConveyPlayer> getConnectedUsers() {
         if (ConveyBukkit.getInstance().getConveyServer() != null && ConveyBukkit.getInstance().getConveyServer().getName().equals(getName())) {
-            return (List) ConveyBukkit.getInstance().getPlayers();
+            return (List) ConveyBukkit.getInstance().getLocalPlayers();
         }
         return connectedUsers;
     }

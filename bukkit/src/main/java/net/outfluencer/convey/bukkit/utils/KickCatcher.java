@@ -93,19 +93,18 @@ public class KickCatcher {
 
             // sorry that's even more hacky than the trash below in the close
             // maybe md5 will add an server close event soon
-            VerifyCookie verifyCookie = new VerifyCookie();
+            /*VerifyCookie verifyCookie = new VerifyCookie();
             InternalCookie internalCookie = new InternalCookie();
-            Server fallback = new ServerImplBukkit(null, null, false, false, null, 0, false, List.of(), false);
-            KickCookie kickCookie = new KickCookie();
+            Server fallback = new ServerImplBukkit(null, null, false, false, null, 0, false, List.of(), false);*/
 
             @Override
             protected void encode(ChannelHandlerContext channelHandlerContext, Object o, List<Object> list) {
                 if (kickPacketClass.isInstance(o)) {
-                    fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
+                    Server fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
 
-                    player.getCookieCache().add(kickCookie = new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), "catched " + o)));
+                    player.getCookieCache().add(new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), "catched " + o)));
 
-                    verifyCookie = new VerifyCookie();
+                    VerifyCookie verifyCookie = new VerifyCookie();
                     long creationTime = System.currentTimeMillis();
                     verifyCookie.setUuid(bukkitPlayer.getUniqueId());
                     verifyCookie.setFromServer(ConveyBukkit.getInstance().getConveyServer().getName());
@@ -114,7 +113,7 @@ public class KickCatcher {
 
                     List<String> allCookies = new ArrayList<>();
                     for (FriendlyCookie cookie : player.getCookieCache()) {
-                        internalCookie = new InternalCookie(fallback.getName(), creationTime, uuid, cookie);
+                        InternalCookie internalCookie = new InternalCookie(fallback.getName(), creationTime, uuid, cookie);
                         allCookies.add(internalCookie.getCookieName());
                         list.add(createCookieStorePacket(internalCookie.getCookieName(), parseInternalCookie(internalCookie)));
                     }
@@ -131,18 +130,15 @@ public class KickCatcher {
 
             // sorry thats hacky, we bassicly schedule the close on the pipeline to ensure the transfer will apply
             @Override
-            public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-                System.out.println("close queue");
+            public void close(ChannelHandlerContext ctx, ChannelPromise promise) {
 
                 ctx.executor().schedule(() -> {
                     try {
-                        System.out.println("close queue");
                         super.close(ctx, promise);
-                        System.out.println("closed!");
                     } catch (Exception e) {
                         throw new IllegalStateException(e);
                     }
-                }, 2, TimeUnit.SECONDS);
+                }, 1, TimeUnit.SECONDS);
             }
         });
     }

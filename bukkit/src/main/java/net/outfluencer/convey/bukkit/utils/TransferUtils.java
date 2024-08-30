@@ -63,7 +63,7 @@ public class TransferUtils {
         player.sendVerifyCookie(verifyCookie);
 
         bukkitPlayer.transfer(server.getHostname(), server.getPort());
-        convey.getServer().getScheduler().scheduleSyncDelayedTask(convey, () -> {
+        convey.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(convey.getPlugin(), () -> {
             if (bukkitPlayer.isOnline()) {
                 bukkitPlayer.kickPlayer("");
             }

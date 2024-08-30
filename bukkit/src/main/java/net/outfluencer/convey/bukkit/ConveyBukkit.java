@@ -9,6 +9,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.outfluencer.convey.api.Convey;
 import net.outfluencer.convey.api.Server;
@@ -17,6 +18,7 @@ import net.outfluencer.convey.api.player.ConveyPlayer;
 import net.outfluencer.convey.api.player.LocalConveyPlayer;
 import net.outfluencer.convey.bukkit.commands.ConveyCommand;
 import net.outfluencer.convey.bukkit.commands.GListCommand;
+import net.outfluencer.convey.bukkit.commands.ServerCommand;
 import net.outfluencer.convey.bukkit.handler.ClientPacketHandler;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
 import net.outfluencer.convey.bukkit.listeners.PlayerJoinListener;
@@ -25,7 +27,6 @@ import net.outfluencer.convey.bukkit.listeners.PlayerLoginListener;
 import net.outfluencer.convey.bukkit.listeners.PlayerQuitListener;
 import net.outfluencer.convey.bukkit.utils.KickCatcher;
 import net.outfluencer.convey.bukkit.utils.TransferUtils;
-import net.outfluencer.convey.bukkit.commands.ServerCommand;
 import net.outfluencer.convey.common.protocol.packets.AbstractPacket;
 import net.outfluencer.convey.common.protocol.pipe.*;
 import net.outfluencer.convey.common.utils.AESUtils;
@@ -43,10 +44,15 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
-public class ConveyBukkit extends JavaPlugin implements Convey {
+@RequiredArgsConstructor
+public class ConveyBukkit extends Convey {
+
+    public static ConveyBukkit getInstance() {
+        return (ConveyBukkit) Convey.getInstance();
+    }
 
     @Getter
-    private static ConveyBukkit instance;
+    private final JavaPlugin plugin;
     @Getter
     private final Map<Player, ConveyPlayerImplBukkit> playerMap = new HashMap<>();
     @Setter
@@ -71,12 +77,13 @@ public class ConveyBukkit extends JavaPlugin implements Convey {
     private List<String> admins = new ArrayList<>();
 
     @Override
-    public List<LocalConveyPlayer> getPlayers() {
+    public List<LocalConveyPlayer> getLocalPlayers() {
         Collection collection = playerMap.values();
-        return (List<LocalConveyPlayer>)List.copyOf(collection);
+        return (List<LocalConveyPlayer>) List.copyOf(collection);
     }
 
-    public List<ConveyPlayer> getNetworkPlayers() {
+    @Override
+    public List<ConveyPlayer> getGlobalPlayers() {
         List<ConveyPlayer> list = new ArrayList<>();
         servers.values().forEach(server -> list.addAll(server.getConnectedUsers()));
         return List.copyOf(list);
@@ -94,48 +101,45 @@ public class ConveyBukkit extends JavaPlugin implements Convey {
         return false;
     }
 
-    @Override
     public void onEnable() {
+        setInstance(this);
 
         // preload
         CookieRegistry.VERIFY_COOKIE.length();
         KickCatcher.VERSION.length();
 
-        saveDefaultConfig();
+        plugin.saveDefaultConfig();
         try {
-            secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(getConfig().getString("encryption_key")));
+            secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(plugin.getConfig().getString("encryption_key")));
         } catch (Exception exception) {
-            getLogger().severe("Please set the encryption key in the config.yml to the same as in the convey server config.json");
-            Bukkit.getPluginManager().disablePlugin(this);
+            plugin.getLogger().severe("Please set the encryption key in the config.yml to the same as in the convey server config.json");
+            Bukkit.getPluginManager().disablePlugin(plugin);
             return;
         }
 
-        instance = this;
         aesUtils = new AESUtils(secretKey);
         reloadMessages();
 
-        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerKickListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(), plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerKickListener(), plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), plugin);
 
 
-
-        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+        plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
             if (!masterIsConnected()) {
                 master = null;
                 connectToMaster();
             }
         }, 0, 20 * 30);
 
-        getCommand("convey").setExecutor(new ConveyCommand());
-        getCommand("server").setExecutor(new ServerCommand());
-        getCommand("glist").setExecutor(new GListCommand());
+        plugin.getCommand("convey").setExecutor(new ConveyCommand());
+        plugin.getCommand("server").setExecutor(new ServerCommand());
+        plugin.getCommand("glist").setExecutor(new GListCommand());
 
         Bukkit.getOnlinePlayers().forEach(player -> playerMap.put(player, new ConveyPlayerImplBukkit(player)));
     }
 
-    @Override
     public void onDisable() {
         if (master != null) {
             master.close();
@@ -168,7 +172,8 @@ public class ConveyBukkit extends JavaPlugin implements Convey {
         new NioEventLoopGroup().close();
         bootstrap.connect("157.90.241.237", 21639).addListener((ChannelFutureListener) channelFuture -> {
             if (!channelFuture.isSuccess()) {
-                getLogger().warning("Could not connect to master server");
+                channelFuture.cause().printStackTrace();
+                plugin.getLogger().warning("Could not connect to master server");
             }
         });
     }
@@ -180,7 +185,7 @@ public class ConveyBukkit extends JavaPlugin implements Convey {
             try (FileReader rd = new FileReader(file)) {
                 cacheResourceBundle(cachedFormats, new PropertyResourceBundle(rd));
             } catch (IOException ex) {
-                getLogger().log(Level.SEVERE, "Could not load custom messages.properties", ex);
+                plugin.getLogger().log(Level.SEVERE, "Could not load custom messages.properties", ex);
             }
         }
         ResourceBundle baseBundle = ResourceBundle.getBundle("messages");
@@ -202,16 +207,17 @@ public class ConveyBukkit extends JavaPlugin implements Convey {
 
     public boolean fallback(Player player, String reason) {
         for (Server server : servers.values()) {
-            if(server.isFallbackServer() && transferUtils.transferPlayer(this.getPlayerMap().get(player), server, false, reason)) {
+            if (server.isFallbackServer() && transferUtils.transferPlayer(this.getPlayerMap().get(player), server, false, reason)) {
                 return true;
             }
         }
         return false;
     }
+
     public Server fallbackServerName(Player player) {
         for (Server server : servers.values()) {
-            if(server.isFallbackServer() && !server.getName().equals(getConveyServer().getName())) {
-                if(server.isPermissionRequired()) {
+            if (server.isFallbackServer() && !server.getName().equals(getConveyServer().getName())) {
+                if (server.isPermissionRequired()) {
                     if (!player.hasPermission(server.getJoinPermission())) {
                         continue;
                     }

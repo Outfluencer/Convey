@@ -49,7 +49,7 @@ public class ClientPacketHandler extends AbstractPacketHandler {
     @Override
     public void handle(PingPacket pingPacket) {
         if (lastPingPacket == null || pingPacket.getTime() != lastPingPacket.getTime()) {
-            convey.getLogger().warning("Desynced ping packet received " + pingPacket.getTime() + " but waited for " + lastPingPacket.getTime());
+            convey.getPlugin().getLogger().warning("Desynced ping packet received " + pingPacket.getTime() + " but waited for " + lastPingPacket.getTime());
             return;
         }
         ping = System.currentTimeMillis() - pingPacket.getTime();
@@ -62,16 +62,16 @@ public class ClientPacketHandler extends AbstractPacketHandler {
         channel.writeAndFlush(new HelloPacket(Bukkit.getPort(), Bukkit.getOnlinePlayers().stream().map(player ->
                 new UserData(player.getName(), player.getUniqueId())).toList()));
         keepAliveSchedule();
-        convey.getLogger().info("Connected to master server");
+        convey.getPlugin().getLogger().info("Connected to master server");
 
-        List<UserData> userData = ConveyBukkit.getInstance().getPlayers().stream().map(player -> new UserData(player.getName(), player.getUniqueId())).collect(Collectors.toList());
+        List<UserData> userData = ConveyBukkit.getInstance().getLocalPlayers().stream().map(player -> new UserData(player.getName(), player.getUniqueId())).collect(Collectors.toList());
         ServerSyncPacket serverSyncPacket = new ServerSyncPacket("", false, true, userData);
         this.channel.writeAndFlush(serverSyncPacket);
     }
 
     @Override
     public void handle(ServerInfoPacket serverInfoPacket) {
-        convey.getLogger().info("Received server info packet: " + serverInfoPacket);
+        convey.getPlugin().getLogger().info("Received server info packet: " + serverInfoPacket);
         Map<String, Server> servers = new HashMap<>();
         serverInfoPacket.getServerInfo().forEach(host -> {
             List<ConveyPlayer> list = host.getUserData().stream().map(user -> new RemoteConveyPlayer(user.getName(), user.getUniqueId())).collect(Collectors.toList());
@@ -131,7 +131,7 @@ public class ClientPacketHandler extends AbstractPacketHandler {
     @Override
     public void disconnected(Channel channel) {
         convey.getServers().forEach( (s, server) -> ((ServerImplBukkit) server).setConnected(false));
-        convey.getLogger().severe("master server disconnected");
+        convey.getPlugin().getLogger().severe("master server disconnected");
         closed = true;
         if (convey.getMaster().equals(this)) {
             convey.setMaster(null);
