@@ -6,12 +6,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.annotation.command.Commands;
 
+@Commands(@org.bukkit.plugin.java.annotation.command.Command(name = "convey", desc = "Convey command"))
 public class ConveyCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         ConveyBukkit convey = ConveyBukkit.getInstance();
-        if(convey.getConveyServer() == null) {
+        if (convey.getConveyServer() == null) {
             sender.sendMessage(ChatColor.RED + "Convey is loading...");
             return false;
         }

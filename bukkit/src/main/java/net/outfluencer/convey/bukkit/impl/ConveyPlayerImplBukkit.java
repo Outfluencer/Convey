@@ -28,6 +28,8 @@ public class ConveyPlayerImplBukkit implements LocalConveyPlayer {
 
     private final Player player;
 
+    private boolean catchKicks = true;
+
     @Override
     public String getName() {
         return this.player.getName();
@@ -46,6 +48,12 @@ public class ConveyPlayerImplBukkit implements LocalConveyPlayer {
     @Override
     public void sendMessage(String message) {
         this.player.sendMessage(message);
+    }
+
+    @Override
+    public void kick(String message) {
+        catchKicks = false;
+        player.kickPlayer(message);
     }
 
     @SneakyThrows

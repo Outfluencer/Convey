@@ -53,6 +53,14 @@ public class PlayerLoginListener implements Listener {
             }
         }
 
+        if(ConveyBukkit.getInstance()
+                .getGlobalPlayers().stream()
+                .filter( p -> p.getUniqueId().equals(player.getUniqueId()) || p.getName().equalsIgnoreCase(player.getName()))
+                .findAny().orElse(null) != null) {
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, convey.getTranslation("already-connected-network"));
+        }
+
+
         if (!player.isTransferred()) {
             if (server.isDirectJoinAllowed()) {
                 this.postCookies(conveyPlayer, null, null);

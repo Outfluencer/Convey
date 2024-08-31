@@ -147,4 +147,12 @@ public class ClientPacketHandler extends AbstractPacketHandler {
             channel.close();
         }
     }
+
+    @Override
+    public void handle(PlayerKickPacket playerKickPacket) {
+        UserData userData = playerKickPacket.getUserData();
+        convey.getLocalPlayers().stream()
+                .filter(player -> player.getUniqueId().equals(userData.getUniqueId()) || player.getName().equalsIgnoreCase(userData.getName()))
+                .forEach(player -> convey.getPlugin().getServer().getScheduler().runTask(convey.getPlugin(), () -> player.kick(playerKickPacket.getReason())));
+    }
 }

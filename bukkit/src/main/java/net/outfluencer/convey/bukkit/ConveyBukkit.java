@@ -95,7 +95,8 @@ public class ConveyBukkit extends Convey {
 
     public boolean sendIfConnected(Supplier<AbstractPacket> packet) {
         if (masterIsConnected()) {
-            master.getChannel().writeAndFlush(packet.get());
+            Channel channel = master.getChannel();
+            channel.eventLoop().execute(() -> channel.writeAndFlush(packet.get()));
             return true;
         }
         return false;

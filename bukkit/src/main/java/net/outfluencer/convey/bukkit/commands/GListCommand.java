@@ -7,10 +7,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.plugin.java.annotation.command.Commands;
 
 import java.util.Collections;
 import java.util.List;
 
+@Commands(@org.bukkit.plugin.java.annotation.command.Command(name = "glist", desc = "Lists all players on the network", permission = "convey.command.glist"))
 public class GListCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {

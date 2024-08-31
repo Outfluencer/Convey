@@ -99,7 +99,7 @@ public class KickCatcher {
 
             @Override
             protected void encode(ChannelHandlerContext channelHandlerContext, Object o, List<Object> list) {
-                if (kickPacketClass.isInstance(o)) {
+                if (player.isCatchKicks() && kickPacketClass.isInstance(o)) {
                     fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
 
                     player.getCookieCache().add(new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), "catched " + o)));
@@ -130,8 +130,12 @@ public class KickCatcher {
 
             // sorry thats hacky, we bassicly schedule the close on the pipeline to ensure the transfer will apply
             @Override
-            public void close(ChannelHandlerContext ctx, ChannelPromise promise) {
+            public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
 
+                if(!player.isCatchKicks()) {
+                    super.close(ctx, promise);
+                    return;
+                }
                 ctx.executor().schedule(() -> {
                     try {
                         super.close(ctx, promise);

@@ -27,9 +27,13 @@ public class AbstractPacketHandler {
     }
 
     public void handle(SendMessageToPlayerPacket sendMessageToPlayerPacket) {
+
     }
 
     public void handle(ServerSyncPacket serverDisconnectedPacket) {
 
+    }
+
+    public void handle(PlayerKickPacket playerKickPacket) {
     }
 }

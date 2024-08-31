@@ -27,6 +27,13 @@ public class TransferUtils {
             return false;
         }
 
+        if (!server.isConnected()) {
+            if (sendMessage) {
+                player.getPlayer().sendMessage(convey.getTranslation("currently-offline", server.getName()));
+            }
+            return false;
+        }
+
         Player bukkitPlayer = player.getPlayer();
 
         if (server.isPermissionRequired()) {
@@ -38,7 +45,7 @@ public class TransferUtils {
             }
         }
 
-        if(reason != null) {
+        if (reason != null) {
             player.addCookie(new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), reason)));
         }
 

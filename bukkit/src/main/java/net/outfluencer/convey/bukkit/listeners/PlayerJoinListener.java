@@ -18,10 +18,14 @@ public class PlayerJoinListener implements Listener {
         ConveyBukkit conveyBukkit = ConveyBukkit.getInstance();
         Player player = event.getPlayer();
         ConveyPlayerImplBukkit conveyPlayer = ConveyBukkit.getInstance().getPlayerMap().get(player);
-        KickCatcher.applyKickCatcher(conveyPlayer);
-        if(conveyBukkit.masterIsConnected()) {
-            conveyBukkit.getMaster().getChannel().writeAndFlush(new PlayerServerPacket(true, new UserData(player.getName(), player.getUniqueId()), ConveyBukkit.getInstance().getConveyServer().getName()));
+        if (conveyPlayer == null) {
+            event.getPlayer().kickPlayer("PlayerJoinListener onJoin conveyPlayer == null");
+            return;
         }
+        KickCatcher.applyKickCatcher(conveyPlayer);
+
+        conveyBukkit.sendIfConnected( () -> new PlayerServerPacket(true, new UserData(player.getName(), player.getUniqueId()), ConveyBukkit.getInstance().getConveyServer().getName()));
+
 
         conveyPlayer.getCookieCache().removeIf(cookie -> {
             if (cookie instanceof KickCookie kickCookie) {

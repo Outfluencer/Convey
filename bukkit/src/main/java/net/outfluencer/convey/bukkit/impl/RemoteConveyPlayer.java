@@ -6,14 +6,15 @@ import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.api.player.ConveyPlayer;
 import net.outfluencer.convey.api.player.LocalConveyPlayer;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
+import net.outfluencer.convey.common.api.UserData;
+import net.outfluencer.convey.common.protocol.packets.PlayerKickPacket;
 import net.outfluencer.convey.common.protocol.packets.SendMessageToPlayerPacket;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
-@RequiredArgsConstructor
 @Data
+@RequiredArgsConstructor
 public class RemoteConveyPlayer implements ConveyPlayer {
 
     private final String name;
@@ -31,11 +32,16 @@ public class RemoteConveyPlayer implements ConveyPlayer {
 
     @Override
     public LocalConveyPlayer getLocalPlayer() {
-        for(ConveyPlayerImplBukkit player : ConveyBukkit.getInstance().getPlayerMap().values()) {
-            if(player.getUniqueId().equals(this.uniqueId)) {
+        for (ConveyPlayerImplBukkit player : ConveyBukkit.getInstance().getPlayerMap().values()) {
+            if (player.getUniqueId().equals(this.uniqueId)) {
                 return player;
             }
         }
         return null;
+    }
+
+    @Override
+    public void kick(String message) {
+        ConveyBukkit.getInstance().sendIfConnected(() -> new PlayerKickPacket(new UserData(name, uniqueId), message));
     }
 }
