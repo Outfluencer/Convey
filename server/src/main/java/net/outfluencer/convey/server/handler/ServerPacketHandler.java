@@ -39,14 +39,17 @@ public class ServerPacketHandler extends AbstractPacketHandler {
 
     @Override
     public void handle(HelloPacket helloPacket) {
-        Preconditions.checkState(!auth, "already authenticated");
-        auth = true;
+        Preconditions.checkState(!this.auth, "already authenticated");
+        this.auth = true;
 
-        JsonServerConfig config = convey.getConfig();
-        String hostAddress = ((InetSocketAddress) channel.remoteAddress()).getAddress().getHostAddress();
+        JsonServerConfig config = this.convey.getConfig();
+        String hostAddress = ((InetSocketAddress) this.channel.remoteAddress()).getAddress().getHostAddress();
         List<CommonServer> serverInfos = new ArrayList<>();
         for (JsonServerConfig.Host host : config.hosts) {
-            if (host.getConnectedUsers() == null) host.setConnectedUsers(new ArrayList<>());
+            if (host.getConnectedUsers() == null) {
+                host.setConnectedUsers(new ArrayList<>());
+            }
+
             serverInfos.add(new CommonServer(host.getName(),
                     host.getAddress(),
                     host.isRequiresPermission(),
@@ -64,19 +67,19 @@ public class ServerPacketHandler extends AbstractPacketHandler {
         Preconditions.checkState(this.currentHost != null, "could not find your name");
 
         ServerInfoPacket serverInfoPacket = new ServerInfoPacket(serverInfos, this.currentHost.getName());
-        channel.writeAndFlush(serverInfoPacket).addListener(future -> {
+        this.channel.writeAndFlush(serverInfoPacket).addListener(future -> {
             if (!future.isSuccess()) {
                 future.cause().printStackTrace();
             }
         });
 
         AdminUsersPacket adminUsersPacket = new AdminUsersPacket(config.getAdmins());
-        channel.writeAndFlush(adminUsersPacket).addListener(future -> {
+        this.channel.writeAndFlush(adminUsersPacket).addListener(future -> {
             if (!future.isSuccess()) {
                 future.cause().printStackTrace();
             }
         });
-        scheduledFuture = channel.eventLoop().scheduleAtFixedRate(() -> {
+        this.scheduledFuture = this.channel.eventLoop().scheduleAtFixedRate(() -> {
             if (!channel.isActive()) {
                 scheduledFuture.cancel(false);
                 return;
@@ -123,21 +126,21 @@ public class ServerPacketHandler extends AbstractPacketHandler {
 
     @Override
     public void handle(PingPacket pingPacket) {
-        channel.writeAndFlush(pingPacket);
+        this.channel.writeAndFlush(pingPacket);
     }
 
     @Override
     public void handle(PlayerServerPacket playerServerPacket) {
-        JsonServerConfig.Host host = convey.getServerInfos().get(currentHost.getName());
+        JsonServerConfig.Host host = this.convey.getServerInfos().get(this.currentHost.getName());
         if (playerServerPacket.isJoin()) {
             host.getConnectedUsers().add(playerServerPacket.getUserData());
         } else {
             host.getConnectedUsers().remove(playerServerPacket.getUserData());
         }
 
-        convey.getServerInfos().values().forEach(h -> {
-            if (h.isActive()) {
-                h.getPacketHandler().channel.writeAndFlush(playerServerPacket);
+        this.convey.getServerInfos().values().forEach(info -> {
+            if (info.isActive()) {
+                info.getPacketHandler().channel.writeAndFlush(playerServerPacket);
             }
         });
     }
@@ -145,10 +148,10 @@ public class ServerPacketHandler extends AbstractPacketHandler {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder().append("[");
-        if (currentHost != null) {
-            sb.append(currentHost.getName()).append(" | ");
+        if (this.currentHost != null) {
+            sb.append(this.currentHost.getName()).append(" | ");
         }
-        sb.append(channel.remoteAddress()).append("]");
+        sb.append(this.channel.remoteAddress()).append("]");
         return sb.toString();
     }
 }

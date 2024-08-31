@@ -9,6 +9,7 @@ import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.common.protocol.packets.SendMessageToPlayerPacket;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -25,13 +26,13 @@ public class RemoteConveyPlayer implements ConveyPlayer {
 
     @Override
     public void sendMessage(String message) {
-        ConveyBukkit.getInstance().sendIfConnected(() -> new SendMessageToPlayerPacket(Arrays.asList(getUniqueId()), message));
+        ConveyBukkit.getInstance().sendIfConnected(() -> new SendMessageToPlayerPacket(Collections.singletonList(this.uniqueId), message));
     }
 
     @Override
     public LocalConveyPlayer getLocalPlayer() {
         for(ConveyPlayerImplBukkit player : ConveyBukkit.getInstance().getPlayerMap().values()) {
-            if(player.getUniqueId().equals(getUniqueId())) {
+            if(player.getUniqueId().equals(this.uniqueId)) {
                 return player;
             }
         }

@@ -8,12 +8,12 @@ public class ConveyBukkitPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        convey = new ConveyBukkit(this);
-        convey.onEnable();
+        this.convey = new ConveyBukkit(this);
+        this.convey.onEnable();
     }
 
     @Override
     public void onDisable() {
-        convey.onDisable();
+        this.convey.onDisable();
     }
 }

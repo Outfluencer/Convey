@@ -1,11 +1,10 @@
 package net.outfluencer.convey.bukkit.utils;
 
-import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
-import net.outfluencer.convey.api.cookie.builtint.KickCookie;
+import net.outfluencer.convey.api.cookie.builtin.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
 import org.bukkit.entity.Player;

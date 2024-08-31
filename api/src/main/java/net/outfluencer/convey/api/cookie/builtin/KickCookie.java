@@ -1,4 +1,4 @@
-package net.outfluencer.convey.api.cookie.builtint;
+package net.outfluencer.convey.api.cookie.builtin;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -21,7 +21,7 @@ public class PacketDecoder extends MessageToMessageDecoder<ByteBuf> {
         if (!ctx.channel().isActive()) {
             return;
         }
-        AbstractPacket packet = PacketRegistry.createPacket(AbstractPacket.readVarInt(buf), toServer);
+        AbstractPacket packet = PacketRegistry.createPacket(AbstractPacket.readVarInt(buf), this.toServer);
         packet.read(buf);
         System.out.println("PacketDecoder: " + packet);
         out.add(packet);

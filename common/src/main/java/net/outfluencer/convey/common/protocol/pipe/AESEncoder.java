@@ -15,7 +15,7 @@ public class AESEncoder extends MessageToByteEncoder<ByteBuf> {
     protected void encode(ChannelHandlerContext channelHandlerContext, ByteBuf in, ByteBuf out) {
         byte[] bytes = new byte[in.readableBytes()];
         in.readBytes(bytes);
-        out.writeBytes(aesUtils.encrypt(bytes));
+        out.writeBytes(this.aesUtils.encrypt(bytes));
     }
 
     @Override

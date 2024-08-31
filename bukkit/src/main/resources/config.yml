@@ -1,1 +1,2 @@
 encryption_key: key
+master: 127.0.0.1:12345

@@ -32,6 +32,6 @@ public class ServerImplBukkit implements Server {
         if (ConveyBukkit.getInstance().getConveyServer() != null && ConveyBukkit.getInstance().getConveyServer().getName().equals(getName())) {
             return (List) ConveyBukkit.getInstance().getLocalPlayers();
         }
-        return connectedUsers;
+        return this.connectedUsers;
     }
 }

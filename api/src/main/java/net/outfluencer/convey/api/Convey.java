@@ -13,8 +13,8 @@ public abstract class Convey {
     private static Convey instance;
 
     public static void setInstance(Convey instance) {
-        Preconditions.checkNotNull( instance, "instance" );
-        Preconditions.checkArgument( Convey.instance == null, "Instance already set" );
+        Preconditions.checkNotNull(instance, "instance");
+        Preconditions.checkArgument(Convey.instance == null, "Instance already set");
         Convey.instance = instance;
     }
 

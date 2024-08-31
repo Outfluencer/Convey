@@ -27,22 +27,22 @@ public class ClientPacketHandler extends AbstractPacketHandler {
     private final ConveyBukkit convey;
     @Getter
     private Channel channel;
-    public boolean isActive() {
-        return channel != null && channel.isActive() && !closed;
-    }
     private ScheduledFuture<?> keepAliveSchedule;
     private PingPacket lastPingPacket;
-
     @Getter
     long ping = -1;
 
+    public boolean isActive() {
+        return this.channel != null && this.channel.isActive() && !this.closed;
+    }
+
     private void keepAliveSchedule() {
-        keepAliveSchedule = channel.eventLoop().scheduleAtFixedRate(() -> {
-            if (!channel.isActive()) {
-                keepAliveSchedule.cancel(false);
+        this.keepAliveSchedule = this.channel.eventLoop().scheduleAtFixedRate(() -> {
+            if (!this.channel.isActive()) {
+                this.keepAliveSchedule.cancel(false);
                 return;
             }
-            channel.writeAndFlush(lastPingPacket = new PingPacket(System.currentTimeMillis()));
+            this.channel.writeAndFlush(this.lastPingPacket = new PingPacket(System.currentTimeMillis()));
         }, 5, 5, TimeUnit.SECONDS);
     }
 
@@ -58,11 +58,11 @@ public class ClientPacketHandler extends AbstractPacketHandler {
     @Override
     public void connected(Channel channel) {
         this.channel = channel;
-        convey.setMaster(this);
+        this.convey.setMaster(this);
         channel.writeAndFlush(new HelloPacket(Bukkit.getPort(), Bukkit.getOnlinePlayers().stream().map(player ->
                 new UserData(player.getName(), player.getUniqueId())).toList()));
-        keepAliveSchedule();
-        convey.getPlugin().getLogger().info("Connected to master server");
+        this.keepAliveSchedule();
+        this.convey.getPlugin().getLogger().info("Connected to master server");
 
         List<UserData> userData = ConveyBukkit.getInstance().getLocalPlayers().stream().map(player -> new UserData(player.getName(), player.getUniqueId())).collect(Collectors.toList());
         ServerSyncPacket serverSyncPacket = new ServerSyncPacket("", false, true, userData);
@@ -130,7 +130,7 @@ public class ClientPacketHandler extends AbstractPacketHandler {
 
     @Override
     public void disconnected(Channel channel) {
-        convey.getServers().forEach( (s, server) -> ((ServerImplBukkit) server).setConnected(false));
+        convey.getServers().forEach((s, server) -> ((ServerImplBukkit) server).setConnected(false));
         convey.getPlugin().getLogger().severe("master server disconnected");
         closed = true;
         if (convey.getMaster().equals(this)) {

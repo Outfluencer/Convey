@@ -6,14 +6,16 @@ import net.outfluencer.convey.server.netty.NettyServer;
 import net.outfluencer.convey.common.utils.AESUtils;
 
 import javax.crypto.SecretKey;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO fix duplicate login
+// TODO convey plugin api support
 public class Convey {
 
     @Getter
@@ -32,33 +34,27 @@ public class Convey {
 
         System.out.println("Loading config...");
         try {
-            loadConfig();
+            this.loadConfig();
         } catch (IOException e) {
             System.err.println("could not load config");
             e.printStackTrace();
             return;
         }
         System.out.println("Parsing secret key...");
-        this.secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(config.encryptionKey));
+        this.secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(this.config.encryptionKey));
 
         System.out.println("Starting Netty server...");
-        nettyServer = new NettyServer(this);
-        nettyServer.startListener();
+        this.nettyServer = new NettyServer(this);
+        this.nettyServer.startListener();
     }
 
     public void loadConfig() throws IOException {
-        File f = new File("config.json");
-        if (f.exists()) {
-            config = JsonServerConfig.gson.fromJson(new FileReader(f), JsonServerConfig.class);
-        } else {
-            config = new JsonServerConfig();
-        }
-        FileWriter writer = new FileWriter(f);
-        writer.write(JsonServerConfig.gson.toJson(config));
-        writer.flush();
-        writer.close();
+        Path path = Path.of("config.json");
+        this.config = Files.exists(path) ? JsonServerConfig.GSON.fromJson(Files.newBufferedReader(path), JsonServerConfig.class) : new JsonServerConfig();
+
+        Files.writeString(path, JsonServerConfig.GSON.toJson(this.config), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         Map<String, JsonServerConfig.Host> serverInfos = new HashMap<>();
-        config.getHosts().forEach(host -> serverInfos.put(host.getName(), host));
+        this.config.getHosts().forEach(host -> serverInfos.put(host.getName(), host));
         this.serverInfos = serverInfos;
     }
 

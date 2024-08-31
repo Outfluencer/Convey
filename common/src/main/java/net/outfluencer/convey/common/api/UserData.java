@@ -17,13 +17,13 @@ public class UserData {
     private UUID uniqueId;
 
     public void read(ByteBuf buf) {
-        name = AbstractPacket.readString(buf);
-        uniqueId = AbstractPacket.readUUID(buf);
+        this.name = AbstractPacket.readString(buf);
+        this.uniqueId = AbstractPacket.readUUID(buf);
     }
 
     public void write(ByteBuf buf) {
-        AbstractPacket.writeString(name, buf);
-        AbstractPacket.writeUUID(uniqueId, buf);
+        AbstractPacket.writeString(this.name, buf);
+        AbstractPacket.writeUUID(this.uniqueId, buf);
     }
 
 }

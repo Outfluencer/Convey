@@ -19,17 +19,17 @@ public class Varint21LengthFieldPrepender extends MessageToByteEncoder<ByteBuf> 
         out.writeBytes(msg);
     }
 
-    static int varintSize(int paramInt) {
-        if ((paramInt & 0xFFFFFF80) == 0) {
+    static int varintSize(int i) {
+        if ((i & 0xFFFFFF80) == 0) {
             return 1;
         }
-        if ((paramInt & 0xFFFFC000) == 0) {
+        if ((i & 0xFFFFC000) == 0) {
             return 2;
         }
-        if ((paramInt & 0xFFE00000) == 0) {
+        if ((i & 0xFFE00000) == 0) {
             return 3;
         }
-        if ((paramInt & 0xF0000000) == 0) {
+        if ((i & 0xF0000000) == 0) {
             return 4;
         }
         return 5;

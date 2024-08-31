@@ -12,8 +12,8 @@ public class PacketRegistry {
 
     private static final Supplier<? extends AbstractPacket>[] TO_SERVER;
     private static final Supplier<? extends AbstractPacket>[] TO_CLIENT;
-    private static Map<Class<? extends AbstractPacket>, Integer> PACKET_IDS_TO_SERVER = new HashMap<>();
-    private static Map<Class<? extends AbstractPacket>, Integer> PACKET_IDS_TO_CLIENT = new HashMap<>();
+    private static final Map<Class<? extends AbstractPacket>, Integer> PACKET_IDS_TO_SERVER;
+    private static final Map<Class<? extends AbstractPacket>, Integer> PACKET_IDS_TO_CLIENT;
 
 
     public static AbstractPacket createPacket(int id, boolean toServer) {
@@ -35,6 +35,9 @@ public class PacketRegistry {
 
 
     static {
+        PACKET_IDS_TO_SERVER = new HashMap<>();
+        PACKET_IDS_TO_CLIENT = new HashMap<>();
+
         TO_SERVER = new Supplier[]{
                 HelloPacket::new, PingPacket::new, PlayerServerPacket::new, ServerSyncPacket::new
         };

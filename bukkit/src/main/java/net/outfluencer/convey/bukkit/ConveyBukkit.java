@@ -105,50 +105,54 @@ public class ConveyBukkit extends Convey {
         setInstance(this);
 
         // preload
-        CookieRegistry.VERIFY_COOKIE.length();
-        KickCatcher.VERSION.length();
-
-        plugin.saveDefaultConfig();
         try {
-            secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(plugin.getConfig().getString("encryption_key")));
+            Class.forName(CookieRegistry.class.getName(), true, ConveyBukkit.class.getClassLoader());
+            Class.forName(KickCatcher.class.getName(), true, ConveyBukkit.class.getClassLoader());
+        } catch (ClassNotFoundException exception) {
+            throw new RuntimeException(exception);
+        }
+
+        this.plugin.saveDefaultConfig();
+        try {
+            this.secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(plugin.getConfig().getString("encryption_key")));
         } catch (Exception exception) {
-            plugin.getLogger().severe("Please set the encryption key in the config.yml to the same as in the convey server config.json");
+            this.plugin.getLogger().severe("Please set the encryption key in the config.yml to the same as in the convey server config.json");
             Bukkit.getPluginManager().disablePlugin(plugin);
             return;
         }
 
-        aesUtils = new AESUtils(secretKey);
-        reloadMessages();
+        this.aesUtils = new AESUtils(secretKey);
+        this.reloadMessages();
 
-        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(), plugin);
-        Bukkit.getPluginManager().registerEvents(new PlayerKickListener(), plugin);
-        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), plugin);
-        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(), this.plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerKickListener(), this.plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this.plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this.plugin);
 
 
-        plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+        this.plugin.getServer().getScheduler().runTaskTimerAsynchronously(this.plugin, () -> {
             if (!masterIsConnected()) {
-                master = null;
+                this.master = null;
                 connectToMaster();
             }
         }, 0, 20 * 30);
 
-        plugin.getCommand("convey").setExecutor(new ConveyCommand());
-        plugin.getCommand("server").setExecutor(new ServerCommand());
-        plugin.getCommand("glist").setExecutor(new GListCommand());
+        this.plugin.getCommand("convey").setExecutor(new ConveyCommand());
+        this.plugin.getCommand("server").setExecutor(new ServerCommand());
+        this.plugin.getCommand("glist").setExecutor(new GListCommand());
 
-        Bukkit.getOnlinePlayers().forEach(player -> playerMap.put(player, new ConveyPlayerImplBukkit(player)));
+        Bukkit.getOnlinePlayers().forEach(player -> this.playerMap.put(player, new ConveyPlayerImplBukkit(player)));
     }
 
     public void onDisable() {
-        if (master != null) {
-            master.close();
+        if (this.master != null) {
+            this.master.close();
         }
-        eventLoopGroup.shutdownGracefully();
+        this.eventLoopGroup.shutdownGracefully();
     }
 
 
-    public ChannelInitializer<io.netty.channel.Channel> CHANNEL_CHANNEL_INITIALIZER_CLIENT = new ChannelInitializer<>() {
+    public ChannelInitializer<io.netty.channel.Channel> clientChannelInitializer = new ChannelInitializer<>() {
         @Override
         protected void initChannel(Channel ch) {
             AESUtils aes = new AESUtils(secretKey);
@@ -167,10 +171,10 @@ public class ConveyBukkit extends Convey {
     public void connectToMaster() {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.channel(NioSocketChannel.class);
-        bootstrap.handler(CHANNEL_CHANNEL_INITIALIZER_CLIENT);
-        bootstrap.group(eventLoopGroup);
-        new NioEventLoopGroup().close();
-        bootstrap.connect("157.90.241.237", 21639).addListener((ChannelFutureListener) channelFuture -> {
+        bootstrap.handler(this.clientChannelInitializer);
+        bootstrap.group(this.eventLoopGroup);
+        final String[] arr = this.plugin.getConfig().getString("master").split(":");
+        bootstrap.connect(arr[0], Integer.parseInt(arr[1])).addListener((ChannelFutureListener) channelFuture -> {
             if (!channelFuture.isSuccess()) {
                 channelFuture.cause().printStackTrace();
                 plugin.getLogger().warning("Could not connect to master server");

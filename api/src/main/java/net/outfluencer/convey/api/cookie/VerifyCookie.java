@@ -26,25 +26,25 @@ public class VerifyCookie extends AbstractCookie {
     @SneakyThrows
     @Override
     public void read(DataInputStream dataInputStream) {
-        fromServer = dataInputStream.readUTF();
-        forServer = dataInputStream.readUTF();
-        uuid = new UUID(dataInputStream.readLong(), dataInputStream.readLong());
-        creationTime = dataInputStream.readLong();
+        this.fromServer = dataInputStream.readUTF();
+        this.forServer = dataInputStream.readUTF();
+        this.uuid = new UUID(dataInputStream.readLong(), dataInputStream.readLong());
+        this.creationTime = dataInputStream.readLong();
         int size = dataInputStream.readInt();
         for (int i = 0; i < size; i++) {
-            clientCookies.add(dataInputStream.readUTF());
+            this.clientCookies.add(dataInputStream.readUTF());
         }
     }
 
     @Override
     public void write(DataOutputStream dataOutputStream) throws IOException {
-        dataOutputStream.writeUTF(fromServer);
-        dataOutputStream.writeUTF(forServer);
-        dataOutputStream.writeLong(uuid.getMostSignificantBits());
-        dataOutputStream.writeLong(uuid.getLeastSignificantBits());
-        dataOutputStream.writeLong(creationTime);
-        dataOutputStream.writeInt(clientCookies.size());
-        for (String cookie : clientCookies) {
+        dataOutputStream.writeUTF(this.fromServer);
+        dataOutputStream.writeUTF(this.forServer);
+        dataOutputStream.writeLong(this.uuid.getMostSignificantBits());
+        dataOutputStream.writeLong(this.uuid.getLeastSignificantBits());
+        dataOutputStream.writeLong(this.creationTime);
+        dataOutputStream.writeInt(this.clientCookies.size());
+        for (String cookie : this.clientCookies) {
             dataOutputStream.writeUTF(cookie);
         }
     }

@@ -15,7 +15,7 @@ import java.util.*;
 @NoArgsConstructor
 public class JsonServerConfig {
 
-    public static final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     @SerializedName("bind")
     public String bind = "127.0.0.1:21639";
@@ -32,7 +32,7 @@ public class JsonServerConfig {
 
     @Data
     @NoArgsConstructor
-    public class Host {
+    public static class Host {
         @SerializedName("name")
         private String name;
         @SerializedName("address")
@@ -67,7 +67,7 @@ public class JsonServerConfig {
     }
 
     public String toString() {
-        return gson.toJson(this);
+        return GSON.toJson(this);
     }
 
 }

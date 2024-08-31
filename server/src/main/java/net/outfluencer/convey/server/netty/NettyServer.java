@@ -22,8 +22,6 @@ public class NettyServer {
 
     private final Convey convey;
 
-
-
     public void startListener() {
         EventLoopGroup group = new NioEventLoopGroup();
         ServerBootstrap serverBootstrap = new ServerBootstrap();
@@ -42,11 +40,12 @@ public class NettyServer {
                 ch.pipeline().addLast(new AESEncoder(aes));
                 ch.pipeline().addLast(new PacketEncoder(false));
                 ch.pipeline().addLast(new PacketHandler(new ServerPacketHandler(convey)));
+                System.out.println(ch.remoteAddress());
             }
         };
 
         serverBootstrap.childHandler(channelChannelInitializer);
-        String[] arr = convey.getConfig().getBind().split(":");
-        serverBootstrap.bind(new InetSocketAddress(arr[0], Integer.valueOf(arr[1])));
+        String[] arr = this.convey.getConfig().getBind().split(":");
+        serverBootstrap.bind(new InetSocketAddress(arr[0], Integer.parseInt(arr[1])));
     }
 }

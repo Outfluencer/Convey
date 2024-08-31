@@ -18,7 +18,7 @@ public class AESDecoder extends ByteToMessageDecoder {
         byte[] bytes = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(bytes);
         ByteBuf buf = ctx.alloc().buffer();
-        buf.writeBytes(aesUtils.decrypt(bytes));
+        buf.writeBytes(this.aesUtils.decrypt(bytes));
         list.add(buf);
     }
 

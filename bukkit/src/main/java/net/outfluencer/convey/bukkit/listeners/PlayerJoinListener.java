@@ -1,6 +1,6 @@
 package net.outfluencer.convey.bukkit.listeners;
 
-import net.outfluencer.convey.api.cookie.builtint.KickCookie;
+import net.outfluencer.convey.api.cookie.builtin.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
 import net.outfluencer.convey.bukkit.utils.KickCatcher;

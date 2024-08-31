@@ -8,7 +8,7 @@ import net.outfluencer.convey.api.cookie.CookieCache;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
-import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
+import net.outfluencer.convey.api.cookie.builtin.FriendlyCookie;
 import net.outfluencer.convey.api.player.LocalConveyPlayer;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import org.bukkit.NamespacedKey;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @Data
 public class ConveyPlayerImplBukkit implements LocalConveyPlayer {
 
-    // this list need tp be mutable
+    // this list need to be mutable
     private CookieCache cookieCache;
     private VerifyCookie verifyCookie;
 
@@ -30,12 +30,12 @@ public class ConveyPlayerImplBukkit implements LocalConveyPlayer {
 
     @Override
     public String getName() {
-        return player.getName();
+        return this.player.getName();
     }
 
     @Override
     public UUID getUniqueId() {
-        return player.getUniqueId();
+        return this.player.getUniqueId();
     }
 
     @Override
@@ -43,10 +43,9 @@ public class ConveyPlayerImplBukkit implements LocalConveyPlayer {
         ConveyBukkit.getInstance().getTransferUtils().transferPlayer(this, server, false, null);
     }
 
-
     @Override
     public void sendMessage(String message) {
-        player.sendMessage(message);
+        this.player.sendMessage(message);
     }
 
     @SneakyThrows
@@ -55,7 +54,7 @@ public class ConveyPlayerImplBukkit implements LocalConveyPlayer {
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         cookie.write(dataOutputStream);
         byte[] encrypted = ConveyBukkit.getInstance().getAesUtils().encrypt(byteArrayOutputStream.toByteArray());
-        player.storeCookie(NamespacedKey.fromString(CookieRegistry.VERIFY_COOKIE), encrypted);
+        this.player.storeCookie(NamespacedKey.fromString(CookieRegistry.VERIFY_COOKIE), encrypted);
     }
 
     @SneakyThrows
@@ -64,17 +63,17 @@ public class ConveyPlayerImplBukkit implements LocalConveyPlayer {
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         cookie.write(dataOutputStream);
         byte[] encrypted = ConveyBukkit.getInstance().getAesUtils().encrypt(byteArrayOutputStream.toByteArray());
-        player.storeCookie(NamespacedKey.fromString(cookie.getCookieName()), encrypted);
+        this.player.storeCookie(NamespacedKey.fromString(cookie.getCookieName()), encrypted);
     }
 
     @Override
     public List<FriendlyCookie> getCookies() {
-        return List.copyOf(cookieCache);
+        return List.copyOf(this.cookieCache);
     }
 
     @Override
     public boolean addCookie(FriendlyCookie cookie) {
         Preconditions.checkState(CookieRegistry.isRegistered(cookie.getClass()), "cookie not registered");
-        return cookieCache.add(cookie);
+        return this.cookieCache.add(cookie);
     }
 }

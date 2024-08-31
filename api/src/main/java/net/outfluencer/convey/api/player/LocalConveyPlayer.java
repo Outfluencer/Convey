@@ -1,8 +1,7 @@
 package net.outfluencer.convey.api.player;
 
-import net.outfluencer.convey.api.cookie.CookieCache;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
-import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
+import net.outfluencer.convey.api.cookie.builtin.FriendlyCookie;
 
 import java.util.List;
 

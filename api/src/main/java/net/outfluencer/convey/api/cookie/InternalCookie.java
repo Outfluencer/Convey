@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
+import net.outfluencer.convey.api.cookie.builtin.FriendlyCookie;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

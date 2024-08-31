@@ -23,7 +23,7 @@ public interface Server {
     List<ConveyPlayer> getConnectedUsers();
 
     default String getJoinPermission() {
-        return "convey.join." + getName();
+        return "convey.join." + this.getName();
     }
 
     boolean isConnected();

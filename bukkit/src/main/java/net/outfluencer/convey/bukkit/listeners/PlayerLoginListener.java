@@ -8,7 +8,7 @@ import net.outfluencer.convey.api.cookie.CookieCache;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
-import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
+import net.outfluencer.convey.api.cookie.builtin.FriendlyCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
 import org.bukkit.NamespacedKey;
@@ -30,7 +30,7 @@ public class PlayerLoginListener implements Listener {
 
     public static final long EXPIRE_AFTER = TimeUnit.SECONDS.toMillis(30);
 
-    private Cache<UUID, Long> verifyCache = CacheBuilder.newBuilder()
+    private final Cache<UUID, Long> verifyCache = CacheBuilder.newBuilder()
             .expireAfterWrite(EXPIRE_AFTER + 5000, TimeUnit.MILLISECONDS).build();
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -41,7 +41,12 @@ public class PlayerLoginListener implements Listener {
         ConveyPlayerImplBukkit conveyPlayer = new ConveyPlayerImplBukkit(player);
 
         Server server = convey.getConveyServer();
-        if(server.isPermissionRequired()){
+        if (server == null) {
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER, convey.getTranslation("not-loaded"));
+            return;
+        }
+
+        if(server.isPermissionRequired()) {
             if (!player.hasPermission(server.getJoinPermission())) {
                 event.disallow(PlayerLoginEvent.Result.KICK_OTHER, convey.getTranslation("join-permission-required", server.getJoinPermission()));
                 return;
@@ -49,58 +54,59 @@ public class PlayerLoginListener implements Listener {
         }
 
         if (!player.isTransferred()) {
-            if (server != null && server.isDirectJoinAllowed()) {
-                postCookies(conveyPlayer, null, null);
+            if (server.isDirectJoinAllowed()) {
+                this.postCookies(conveyPlayer, null, null);
                 return;
             }
             event.disallow(PlayerLoginEvent.Result.KICK_OTHER, convey.getTranslation("trusted-server-required"));
             return;
         }
 
-
-        player.retrieveCookie(NamespacedKey.fromString(CookieRegistry.VERIFY_COOKIE)).thenAccept(data -> {
+        // this is not exploitable >:)
+        player.retrieveCookie(NamespacedKey.fromString(CookieRegistry.VERIFY_COOKIE)).thenAccept(verifyCookieData -> {
             try {
-                if(server.isDirectJoinAllowed() && data == null) {
+                if (server.isDirectJoinAllowed() && verifyCookieData == null) {
                     // bypass because we can join directly
-                    postCookies(conveyPlayer, null, null);
+                    this.postCookies(conveyPlayer, null, null);
                     return;
                 }
-                Preconditions.checkState(data != null && data.length > 0, "empty cookie");
-                data = convey.getAesUtils().decrypt(data);
+                Preconditions.checkState(verifyCookieData != null && verifyCookieData.length > 0, "empty cookie");
+                verifyCookieData = convey.getAesUtils().decrypt(verifyCookieData);
                 VerifyCookie verifyCookie = new VerifyCookie();
-                verifyCookie.read(new DataInputStream(new ByteArrayInputStream(data)));
-                Preconditions.checkState(verifyCookie.getUuid().equals(player.getUniqueId()), "invalid uuid verifyCookie ");
+                verifyCookie.read(new DataInputStream(new ByteArrayInputStream(verifyCookieData)));
+                Preconditions.checkState(verifyCookie.getUuid().equals(player.getUniqueId()), "invalid uuid verifyCookie");
                 Preconditions.checkState(verifyCookie.getCreationTime() + EXPIRE_AFTER > System.currentTimeMillis(), "cookies expired");
 
+                Long lastCreationTime = this.verifyCache.getIfPresent(player.getUniqueId());
+                if (lastCreationTime == null) {
+                    lastCreationTime = 0L;
+                }
 
-                Long lastCreationTime = verifyCache.getIfPresent(player.getUniqueId());
-                if (lastCreationTime == null) lastCreationTime = 0L;
                 Preconditions.checkState(lastCreationTime < verifyCookie.getCreationTime(), "illegal verifyCookie");
-                verifyCache.put(player.getUniqueId(), verifyCookie.getCreationTime());
-
+                this.verifyCache.put(player.getUniqueId(), verifyCookie.getCreationTime());
 
                 Preconditions.checkState(convey.getConveyServer() != null && verifyCookie.getForServer().equals(convey.getConveyServer().getName()), "cookie not for current server");
 
                 if (verifyCookie.getClientCookies().isEmpty()) {
-                    postCookies(conveyPlayer, verifyCookie, null);
+                    this.postCookies(conveyPlayer, verifyCookie, null);
                     return;
                 }
 
                 AtomicInteger amt = new AtomicInteger(verifyCookie.getClientCookies().size());
                 List<FriendlyCookie> cookies = new CopyOnWriteArrayList<>();
                 for (String clientCookie : verifyCookie.getClientCookies()) {
-                    player.retrieveCookie(NamespacedKey.fromString(clientCookie)).thenAccept(d -> {
+                    player.retrieveCookie(NamespacedKey.fromString(clientCookie)).thenAccept(cookieData -> {
                         try {
-                            d = convey.getAesUtils().decrypt(d);
+                            cookieData = convey.getAesUtils().decrypt(cookieData);
                             InternalCookie internalCookie = new InternalCookie();
-                            internalCookie.read(new DataInputStream(new ByteArrayInputStream(d)));
+                            internalCookie.read(new DataInputStream(new ByteArrayInputStream(cookieData)));
                             Preconditions.checkState(internalCookie.getUuid().equals(player.getUniqueId()), "invalid uuid internalCookie");
                             Preconditions.checkState(internalCookie.getForServer().equals(verifyCookie.getForServer()), "invalid server");
                             Preconditions.checkState(internalCookie.getCreationTime() == verifyCookie.getCreationTime(), "not created at the same time");
                             // valid cookie
                             cookies.add(internalCookie.getCookie());
                             if (amt.decrementAndGet() == 0) {
-                                postCookies(conveyPlayer, verifyCookie, new CookieCache(cookies));
+                                this.postCookies(conveyPlayer, verifyCookie, new CookieCache(cookies));
                             }
                         } catch (Throwable throwable) {
                             throwable.printStackTrace();

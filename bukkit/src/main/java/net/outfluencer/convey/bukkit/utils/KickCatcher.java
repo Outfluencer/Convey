@@ -9,8 +9,8 @@ import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
-import net.outfluencer.convey.api.cookie.builtint.FriendlyCookie;
-import net.outfluencer.convey.api.cookie.builtint.KickCookie;
+import net.outfluencer.convey.api.cookie.builtin.FriendlyCookie;
+import net.outfluencer.convey.api.cookie.builtin.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
 import net.outfluencer.convey.bukkit.impl.ServerImplBukkit;
@@ -93,18 +93,18 @@ public class KickCatcher {
 
             // sorry that's even more hacky than the trash below in the close
             // maybe md5 will add an server close event soon
-            /*VerifyCookie verifyCookie = new VerifyCookie();
+            VerifyCookie verifyCookie = new VerifyCookie();
             InternalCookie internalCookie = new InternalCookie();
-            Server fallback = new ServerImplBukkit(null, null, false, false, null, 0, false, List.of(), false);*/
+            Server fallback = new ServerImplBukkit(null, null, false, false, null, 0, false, List.of(), false);
 
             @Override
             protected void encode(ChannelHandlerContext channelHandlerContext, Object o, List<Object> list) {
                 if (kickPacketClass.isInstance(o)) {
-                    Server fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
+                    fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
 
                     player.getCookieCache().add(new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), "catched " + o)));
 
-                    VerifyCookie verifyCookie = new VerifyCookie();
+                    verifyCookie = new VerifyCookie();
                     long creationTime = System.currentTimeMillis();
                     verifyCookie.setUuid(bukkitPlayer.getUniqueId());
                     verifyCookie.setFromServer(ConveyBukkit.getInstance().getConveyServer().getName());
@@ -113,7 +113,7 @@ public class KickCatcher {
 
                     List<String> allCookies = new ArrayList<>();
                     for (FriendlyCookie cookie : player.getCookieCache()) {
-                        InternalCookie internalCookie = new InternalCookie(fallback.getName(), creationTime, uuid, cookie);
+                        internalCookie = new InternalCookie(fallback.getName(), creationTime, uuid, cookie);
                         allCookies.add(internalCookie.getCookieName());
                         list.add(createCookieStorePacket(internalCookie.getCookieName(), parseInternalCookie(internalCookie)));
                     }

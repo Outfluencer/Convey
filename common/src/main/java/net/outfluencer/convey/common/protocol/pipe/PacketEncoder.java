@@ -16,7 +16,7 @@ public class PacketEncoder extends MessageToByteEncoder<AbstractPacket> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, AbstractPacket packet, ByteBuf buf) {
-        int packetId = PacketRegistry.getPacketId(packet, toServer);
+        int packetId = PacketRegistry.getPacketId(packet, this.toServer);
         AbstractPacket.writeVarInt(packetId, buf);
         packet.write(buf);
     }

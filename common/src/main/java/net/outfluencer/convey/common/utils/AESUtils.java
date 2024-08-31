@@ -13,8 +13,7 @@ public class AESUtils {
     public static SecretKey generateKey() {
         KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
         keyGenerator.init(256);
-        SecretKey key = keyGenerator.generateKey();
-        return key;
+        return keyGenerator.generateKey();
     }
 
     @SneakyThrows
@@ -30,15 +29,12 @@ public class AESUtils {
     private final Cipher decryptCipher;
     private final Cipher encryptCipher;
 
+    @SneakyThrows
     public AESUtils(SecretKey key) {
-        try {
-            decryptCipher = Cipher.getInstance("AES");
-            decryptCipher.init(Cipher.DECRYPT_MODE, key);
-            encryptCipher = Cipher.getInstance("AES");
-            encryptCipher.init(Cipher.ENCRYPT_MODE, key);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        this.decryptCipher = Cipher.getInstance("AES");
+        this.decryptCipher.init(Cipher.DECRYPT_MODE, key);
+        this.encryptCipher = Cipher.getInstance("AES");
+        this.encryptCipher.init(Cipher.ENCRYPT_MODE, key);
     }
 
 
