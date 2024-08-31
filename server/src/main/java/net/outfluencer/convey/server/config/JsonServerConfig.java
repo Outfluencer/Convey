@@ -18,7 +18,7 @@ public class JsonServerConfig {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     @SerializedName("bind")
-    public String bind = "127.0.0.1:21639";
+    public String bind = "0.0.0.0:21639";
 
     @SerializedName("encryption-key")
     public String encryptionKey = Base64.getEncoder().encodeToString(AESUtils.generateKey().getEncoded());
