@@ -17,7 +17,9 @@ public interface LocalConveyPlayer extends ConveyPlayer {
      * @return true if a cookie of the same type was already present and was replaced, false otherwise
      */
     boolean addCookie(FriendlyCookie cookie);
+
     VerifyCookie getVerifyCookie();
+
     List<FriendlyCookie> getCookies();
 
 }

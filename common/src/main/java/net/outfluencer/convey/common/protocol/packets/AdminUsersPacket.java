@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.outfluencer.convey.common.api.UserData;
 import net.outfluencer.convey.common.protocol.AbstractPacketHandler;
 
 import java.util.ArrayList;

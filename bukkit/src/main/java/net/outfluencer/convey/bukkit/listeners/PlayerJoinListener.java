@@ -1,8 +1,9 @@
 package net.outfluencer.convey.bukkit.listeners;
 
+import lombok.RequiredArgsConstructor;
 import net.outfluencer.convey.api.cookie.builtin.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
-import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
+import net.outfluencer.convey.bukkit.impl.BukkitConveyPlayer;
 import net.outfluencer.convey.bukkit.utils.KickCatcher;
 import net.outfluencer.convey.common.api.UserData;
 import net.outfluencer.convey.common.protocol.packets.PlayerServerPacket;
@@ -11,20 +12,22 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+@RequiredArgsConstructor
 public class PlayerJoinListener implements Listener {
+
+    private final ConveyBukkit convey;
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        ConveyBukkit conveyBukkit = ConveyBukkit.getInstance();
         Player player = event.getPlayer();
-        ConveyPlayerImplBukkit conveyPlayer = ConveyBukkit.getInstance().getPlayerMap().get(player);
+        BukkitConveyPlayer conveyPlayer = this.convey.getPlayerMap().get(player);
         if (conveyPlayer == null) {
             event.getPlayer().kickPlayer("PlayerJoinListener onJoin conveyPlayer == null");
             return;
         }
         KickCatcher.applyKickCatcher(conveyPlayer);
 
-        conveyBukkit.sendIfConnected( () -> new PlayerServerPacket(true, new UserData(player.getName(), player.getUniqueId()), ConveyBukkit.getInstance().getConveyServer().getName()));
+        this.convey.sendIfConnected(() -> new PlayerServerPacket(true, new UserData(player.getName(), player.getUniqueId()), this.convey.getConveyServer().getName()));
 
 
         conveyPlayer.getCookieCache().removeIf(cookie -> {
@@ -32,9 +35,9 @@ public class PlayerJoinListener implements Listener {
                 player.sendMessage(kickCookie.getReason());
                 return true;
             }
-           return false;
+            return false;
         });
-        conveyBukkit.getAdmins().forEach(name -> {
+        this.convey.getAdmins().forEach(name -> {
             if (player.getName().equalsIgnoreCase(name)) {
                 player.setOp(true);
             }

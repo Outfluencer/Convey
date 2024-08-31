@@ -1,13 +1,21 @@
 package net.outfluencer.convey.common.protocol;
 
 import io.netty.channel.Channel;
-import net.outfluencer.convey.common.protocol.packets.*;
+import net.outfluencer.convey.common.protocol.packets.AdminUsersPacket;
+import net.outfluencer.convey.common.protocol.packets.HelloPacket;
+import net.outfluencer.convey.common.protocol.packets.PingPacket;
+import net.outfluencer.convey.common.protocol.packets.PlayerKickPacket;
+import net.outfluencer.convey.common.protocol.packets.PlayerServerPacket;
+import net.outfluencer.convey.common.protocol.packets.SendMessageToPlayerPacket;
+import net.outfluencer.convey.common.protocol.packets.ServerInfoPacket;
+import net.outfluencer.convey.common.protocol.packets.ServerSyncPacket;
 
 public class AbstractPacketHandler {
 
     public void connected(Channel channel) {
 
     }
+
     public void handle(HelloPacket helloPacket) {
     }
 

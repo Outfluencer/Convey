@@ -21,15 +21,20 @@ import net.outfluencer.convey.bukkit.commands.GKickCommand;
 import net.outfluencer.convey.bukkit.commands.GListCommand;
 import net.outfluencer.convey.bukkit.commands.ServerCommand;
 import net.outfluencer.convey.bukkit.handler.ClientPacketHandler;
-import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
+import net.outfluencer.convey.bukkit.impl.BukkitConveyPlayer;
 import net.outfluencer.convey.bukkit.listeners.PlayerJoinListener;
 import net.outfluencer.convey.bukkit.listeners.PlayerKickListener;
 import net.outfluencer.convey.bukkit.listeners.PlayerLoginListener;
 import net.outfluencer.convey.bukkit.listeners.PlayerQuitListener;
 import net.outfluencer.convey.bukkit.utils.KickCatcher;
-import net.outfluencer.convey.bukkit.utils.TransferUtils;
 import net.outfluencer.convey.common.protocol.packets.AbstractPacket;
-import net.outfluencer.convey.common.protocol.pipe.*;
+import net.outfluencer.convey.common.protocol.pipe.AESDecoder;
+import net.outfluencer.convey.common.protocol.pipe.AESEncoder;
+import net.outfluencer.convey.common.protocol.pipe.PacketDecoder;
+import net.outfluencer.convey.common.protocol.pipe.PacketEncoder;
+import net.outfluencer.convey.common.protocol.pipe.PacketHandler;
+import net.outfluencer.convey.common.protocol.pipe.Varint21FrameDecoder;
+import net.outfluencer.convey.common.protocol.pipe.Varint21LengthFieldPrepender;
 import net.outfluencer.convey.common.utils.AESUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -41,21 +46,27 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.Format;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
 @RequiredArgsConstructor
 public class ConveyBukkit extends Convey {
 
-    public static ConveyBukkit getInstance() {
-        return (ConveyBukkit) Convey.getInstance();
-    }
-
     @Getter
     private final JavaPlugin plugin;
     @Getter
-    private final Map<Player, ConveyPlayerImplBukkit> playerMap = new HashMap<>();
+    private final Map<Player, BukkitConveyPlayer> playerMap = new HashMap<>();
     @Setter
     @Getter
     private ClientPacketHandler master;
@@ -67,8 +78,6 @@ public class ConveyBukkit extends Convey {
     private Map<String, Server> servers = new HashMap<>();
     private Map<String, Format> messageFormats;
     @Getter
-    private TransferUtils transferUtils = new TransferUtils(this);
-    @Getter
     private SecretKey secretKey;
     @Getter
     private AESUtils aesUtils;
@@ -76,6 +85,10 @@ public class ConveyBukkit extends Convey {
     @Getter
     @Setter
     private List<String> admins = new ArrayList<>();
+
+    public static ConveyBukkit getInstance() {
+        return (ConveyBukkit) Convey.getInstance();
+    }
 
     @Override
     public List<LocalConveyPlayer> getLocalPlayers() {
@@ -116,20 +129,20 @@ public class ConveyBukkit extends Convey {
 
         this.plugin.saveDefaultConfig();
         try {
-            this.secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(plugin.getConfig().getString("encryption_key")));
+            this.secretKey = AESUtils.bytesToSecretKey(Base64.getDecoder().decode(this.plugin.getConfig().getString("encryption_key")));
         } catch (Exception exception) {
             this.plugin.getLogger().severe("Please set the encryption key in the config.yml to the same as in the convey server config.json");
-            Bukkit.getPluginManager().disablePlugin(plugin);
+            Bukkit.getPluginManager().disablePlugin(this.plugin);
             return;
         }
 
         this.aesUtils = new AESUtils(secretKey);
         this.reloadMessages();
 
-        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(), this.plugin);
-        Bukkit.getPluginManager().registerEvents(new PlayerKickListener(), this.plugin);
-        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this.plugin);
-        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this.plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(this), this.plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerKickListener(this), this.plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(this), this.plugin);
+        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(this), this.plugin);
 
 
         this.plugin.getServer().getScheduler().runTaskTimerAsynchronously(this.plugin, () -> {
@@ -139,12 +152,12 @@ public class ConveyBukkit extends Convey {
             }
         }, 0, 20 * 30);
 
-        this.plugin.getCommand("convey").setExecutor(new ConveyCommand());
-        this.plugin.getCommand("server").setExecutor(new ServerCommand());
-        this.plugin.getCommand("glist").setExecutor(new GListCommand());
-        this.plugin.getCommand("gkick").setExecutor(new GKickCommand());
+        this.plugin.getCommand("convey").setExecutor(new ConveyCommand(this));
+        this.plugin.getCommand("server").setExecutor(new ServerCommand(this));
+        this.plugin.getCommand("glist").setExecutor(new GListCommand(this));
+        this.plugin.getCommand("gkick").setExecutor(new GKickCommand(this));
 
-        Bukkit.getOnlinePlayers().forEach(player -> this.playerMap.put(player, new ConveyPlayerImplBukkit(player)));
+        Bukkit.getOnlinePlayers().forEach(player -> this.playerMap.put(player, new BukkitConveyPlayer(this, player)));
     }
 
     public void onDisable() {
@@ -212,9 +225,9 @@ public class ConveyBukkit extends Convey {
         return (format != null) ? format.format(args) : "<translation '" + name + "' missing>";
     }
 
-    public boolean fallback(ConveyPlayerImplBukkit player, String reason) {
+    public boolean fallback(BukkitConveyPlayer player, String reason) {
         for (Server server : servers.values()) {
-            if (server.isFallbackServer() && transferUtils.transferPlayer(player, server, false, reason)) {
+            if (server.isFallbackServer() && player.transfer(server, false, reason)) {
                 return true;
             }
         }

@@ -2,7 +2,15 @@ package net.outfluencer.convey.common.protocol;
 
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
-import net.outfluencer.convey.common.protocol.packets.*;
+import net.outfluencer.convey.common.protocol.packets.AbstractPacket;
+import net.outfluencer.convey.common.protocol.packets.AdminUsersPacket;
+import net.outfluencer.convey.common.protocol.packets.HelloPacket;
+import net.outfluencer.convey.common.protocol.packets.PingPacket;
+import net.outfluencer.convey.common.protocol.packets.PlayerKickPacket;
+import net.outfluencer.convey.common.protocol.packets.PlayerServerPacket;
+import net.outfluencer.convey.common.protocol.packets.SendMessageToPlayerPacket;
+import net.outfluencer.convey.common.protocol.packets.ServerInfoPacket;
+import net.outfluencer.convey.common.protocol.packets.ServerSyncPacket;
 
 import java.util.HashMap;
 import java.util.Map;

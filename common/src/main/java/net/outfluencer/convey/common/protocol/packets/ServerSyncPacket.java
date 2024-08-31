@@ -26,7 +26,7 @@ public class ServerSyncPacket extends AbstractPacket {
     public void read(ByteBuf buf) {
         server = readString(buf);
         disconnect = buf.readBoolean();
-        if(disconnect) {
+        if (disconnect) {
             return;
         }
 
@@ -47,7 +47,7 @@ public class ServerSyncPacket extends AbstractPacket {
     public void write(ByteBuf buf) {
         writeString(server, buf);
         buf.writeBoolean(disconnect);
-        if(disconnect) {
+        if (disconnect) {
             return;
         }
 

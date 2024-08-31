@@ -12,7 +12,14 @@ import net.outfluencer.convey.bukkit.impl.RemoteConveyPlayer;
 import net.outfluencer.convey.bukkit.impl.ServerImplBukkit;
 import net.outfluencer.convey.common.api.UserData;
 import net.outfluencer.convey.common.protocol.AbstractPacketHandler;
-import net.outfluencer.convey.common.protocol.packets.*;
+import net.outfluencer.convey.common.protocol.packets.AdminUsersPacket;
+import net.outfluencer.convey.common.protocol.packets.HelloPacket;
+import net.outfluencer.convey.common.protocol.packets.PingPacket;
+import net.outfluencer.convey.common.protocol.packets.PlayerKickPacket;
+import net.outfluencer.convey.common.protocol.packets.PlayerServerPacket;
+import net.outfluencer.convey.common.protocol.packets.SendMessageToPlayerPacket;
+import net.outfluencer.convey.common.protocol.packets.ServerInfoPacket;
+import net.outfluencer.convey.common.protocol.packets.ServerSyncPacket;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -65,35 +72,35 @@ public class ClientPacketHandler extends AbstractPacketHandler {
         this.keepAliveSchedule();
         this.convey.getPlugin().getLogger().info("Connected to master server");
 
-        List<UserData> userData = ConveyBukkit.getInstance().getLocalPlayers().stream().map(player -> new UserData(player.getName(), player.getUniqueId())).collect(Collectors.toList());
+        List<UserData> userData = this.convey.getLocalPlayers().stream().map(player -> new UserData(player.getName(), player.getUniqueId())).collect(Collectors.toList());
         ServerSyncPacket serverSyncPacket = new ServerSyncPacket("", false, true, userData);
         this.channel.writeAndFlush(serverSyncPacket);
     }
 
     @Override
     public void handle(ServerInfoPacket serverInfoPacket) {
-        convey.getPlugin().getLogger().info("Received server info packet: " + serverInfoPacket);
+        this.convey.getPlugin().getLogger().info("Received server info packet: " + serverInfoPacket);
         Map<String, Server> servers = new HashMap<>();
         serverInfoPacket.getServerInfo().forEach(host -> {
-            List<ConveyPlayer> list = host.getUserData().stream().map(user -> new RemoteConveyPlayer(user.getName(), user.getUniqueId())).collect(Collectors.toList());
-            Server server = new ServerImplBukkit(host.getName(), host.getAddress(), host.isPermissionRequired(), host.isJoinDirectly(),host.getHostname(), host.getPort(), host.isFallbackServer(), list, host.isOnline());
+            List<ConveyPlayer> list = host.getUserData().stream().map(user -> new RemoteConveyPlayer(this.convey, user.getName(), user.getUniqueId())).collect(Collectors.toList());
+            Server server = new ServerImplBukkit(this.convey, host.getName(), host.getAddress(), host.isPermissionRequired(), host.isJoinDirectly(), host.getHostname(), host.getPort(), host.isFallbackServer(), list, host.isOnline());
             servers.put(server.getName(), server);
             if (host.getName().equals(serverInfoPacket.getYourName())) {
-                convey.setConveyServer(server);
+                this.convey.setConveyServer(server);
             }
         });
-        convey.setServers(servers);
+        this.convey.setServers(servers);
     }
 
     @Override
     public void handle(PlayerServerPacket playerServerPacket) {
         Server server = convey.getServers().get(playerServerPacket.getServerName());
-        if(server == convey.getConveyServer()) return;
-        if(playerServerPacket.isJoin()) {
+        if (server == convey.getConveyServer()) return;
+        if (playerServerPacket.isJoin()) {
             // add local player to this list if possible
-            ConveyPlayer conveyPlayer = new RemoteConveyPlayer( playerServerPacket.getUserData().getName(), playerServerPacket.getUserData().getUniqueId());
+            ConveyPlayer conveyPlayer = new RemoteConveyPlayer(this.convey, playerServerPacket.getUserData().getName(), playerServerPacket.getUserData().getUniqueId());
             LocalConveyPlayer localPlayer = conveyPlayer.getLocalPlayer();
-            if(localPlayer != null) {
+            if (localPlayer != null) {
                 conveyPlayer = localPlayer;
             }
             server.getConnectedUsers().add(conveyPlayer);
@@ -104,7 +111,7 @@ public class ClientPacketHandler extends AbstractPacketHandler {
 
     @Override
     public void handle(AdminUsersPacket playerServerPacket) {
-        ConveyBukkit.getInstance().setAdmins(playerServerPacket.getUsers());
+        this.convey.setAdmins(playerServerPacket.getUsers());
     }
 
     @Override
@@ -119,29 +126,29 @@ public class ClientPacketHandler extends AbstractPacketHandler {
 
     @Override
     public void handle(ServerSyncPacket serverDisconnectedPacket) {
-        ServerImplBukkit server = (ServerImplBukkit) convey.getServers().get(serverDisconnectedPacket.getServer());
-        if(server == null) {
+        ServerImplBukkit server = (ServerImplBukkit) this.convey.getServers().get(serverDisconnectedPacket.getServer());
+        if (server == null) {
             return;
         }
-        if(serverDisconnectedPacket.isDisconnect()) {
+        if (serverDisconnectedPacket.isDisconnect()) {
             server.getConnectedUsers().clear();
             server.setConnected(false);
             return;
         }
         List<ConveyPlayer> list = serverDisconnectedPacket.getPlayers()
                 .stream()
-                .map(user -> new RemoteConveyPlayer(user.getName(), user.getUniqueId()))
+                .map(user -> new RemoteConveyPlayer(this.convey, user.getName(), user.getUniqueId()))
                 .collect(Collectors.toList());
         server.setConnectedUsers(list);
     }
 
     @Override
     public void disconnected(Channel channel) {
-        convey.getServers().forEach((s, server) -> ((ServerImplBukkit) server).setConnected(false));
-        convey.getPlugin().getLogger().severe("master server disconnected");
+        this.convey.getServers().forEach((s, server) -> ((ServerImplBukkit) server).setConnected(false));
+        this.convey.getPlugin().getLogger().severe("master server disconnected");
         closed = true;
-        if (convey.getMaster().equals(this)) {
-            convey.setMaster(null);
+        if (this.convey.getMaster().equals(this)) {
+            this.convey.setMaster(null);
         }
     }
 

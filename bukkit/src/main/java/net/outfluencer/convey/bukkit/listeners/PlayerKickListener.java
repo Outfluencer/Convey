@@ -1,20 +1,24 @@
 package net.outfluencer.convey.bukkit.listeners;
 
+import lombok.RequiredArgsConstructor;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
-import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
+import net.outfluencer.convey.bukkit.impl.BukkitConveyPlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerKickEvent;
 
+@RequiredArgsConstructor
 public class PlayerKickListener implements Listener {
+
+    private final ConveyBukkit convey;
 
     @EventHandler
     public void onPlayerKick(PlayerKickEvent event) {
-        ConveyPlayerImplBukkit player = ConveyBukkit.getInstance().getPlayerMap().get(event.getPlayer());
-        if(!player.isCatchKicks()) {
+        BukkitConveyPlayer player = this.convey.getPlayerMap().get(event.getPlayer());
+        if (!player.isCatchKicks()) {
             return;
         }
-        if (ConveyBukkit.getInstance().fallback(player, event.getReason())) {
+        if (this.convey.fallback(player, event.getReason())) {
             event.setCancelled(true);
         }
     }

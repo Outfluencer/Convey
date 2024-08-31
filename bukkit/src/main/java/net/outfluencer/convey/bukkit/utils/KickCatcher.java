@@ -6,14 +6,16 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import lombok.SneakyThrows;
 import net.outfluencer.convey.api.Server;
+import net.outfluencer.convey.api.cookie.AbstractCookie;
 import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.cookie.InternalCookie;
 import net.outfluencer.convey.api.cookie.VerifyCookie;
 import net.outfluencer.convey.api.cookie.builtin.FriendlyCookie;
 import net.outfluencer.convey.api.cookie.builtin.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
-import net.outfluencer.convey.bukkit.impl.ConveyPlayerImplBukkit;
+import net.outfluencer.convey.bukkit.impl.BukkitConveyPlayer;
 import net.outfluencer.convey.bukkit.impl.ServerImplBukkit;
+import net.outfluencer.convey.common.utils.AESUtils;
 import org.bukkit.entity.Player;
 
 import java.io.ByteArrayOutputStream;
@@ -81,8 +83,9 @@ public class KickCatcher {
      */
 
     @SneakyThrows
-    public static void applyKickCatcher(ConveyPlayerImplBukkit player) {
-        ConveyBukkit convey = ConveyBukkit.getInstance();
+    public static void applyKickCatcher(BukkitConveyPlayer player) {
+        ConveyBukkit convey = player.getConvey();
+        AESUtils aesUtils = convey.getAesUtils();
         Player bukkitPlayer = player.getPlayer();
         UUID uuid = bukkitPlayer.getUniqueId();
         Object entityPlayer = getHandleMethod.invoke(bukkitPlayer);
@@ -95,19 +98,24 @@ public class KickCatcher {
             // maybe md5 will add an server close event soon
             VerifyCookie verifyCookie = new VerifyCookie();
             InternalCookie internalCookie = new InternalCookie();
-            Server fallback = new ServerImplBukkit(null, null, false, false, null, 0, false, List.of(), false);
+            Server fallback = new ServerImplBukkit(null, null, null, false, false, null, 0, false, List.of(), false);
 
             @Override
             protected void encode(ChannelHandlerContext channelHandlerContext, Object o, List<Object> list) {
+                fallbackTransfer:
                 if (player.isCatchKicks() && kickPacketClass.isInstance(o)) {
-                    fallback = ConveyBukkit.getInstance().fallbackServerName(player.getPlayer());
+                    fallback = convey.fallbackServerName(player.getPlayer());
+                    if (fallback == null) {
+                        player.setCatchKicks(false);
+                        break fallbackTransfer;
+                    }
 
                     player.getCookieCache().add(new KickCookie(convey.getTranslation("fallback", convey.getConveyServer().getName(), "catched " + o)));
 
                     verifyCookie = new VerifyCookie();
                     long creationTime = System.currentTimeMillis();
                     verifyCookie.setUuid(bukkitPlayer.getUniqueId());
-                    verifyCookie.setFromServer(ConveyBukkit.getInstance().getConveyServer().getName());
+                    verifyCookie.setFromServer(convey.getConveyServer().getName());
                     verifyCookie.setCreationTime(creationTime);
                     verifyCookie.setForServer(fallback.getName());
 
@@ -115,12 +123,12 @@ public class KickCatcher {
                     for (FriendlyCookie cookie : player.getCookieCache()) {
                         internalCookie = new InternalCookie(fallback.getName(), creationTime, uuid, cookie);
                         allCookies.add(internalCookie.getCookieName());
-                        list.add(createCookieStorePacket(internalCookie.getCookieName(), parseInternalCookie(internalCookie)));
+                        list.add(createCookieStorePacket(internalCookie.getCookieName(), parseCookie(aesUtils, internalCookie)));
                     }
 
                     verifyCookie.setClientCookies(allCookies);
-                    list.add(createCookieStorePacket(CookieRegistry.VERIFY_COOKIE, parseVerifyCookie(verifyCookie)));
-                    player.sendVerifyCookie(verifyCookie);
+                    list.add(createCookieStorePacket(CookieRegistry.VERIFY_COOKIE, parseCookie(aesUtils, verifyCookie)));
+                    player.sendCookie(verifyCookie);
 
                     list.add(createTransferPacket(fallback.getHostname(), fallback.getPort()));
                     return;
@@ -131,7 +139,7 @@ public class KickCatcher {
             // sorry thats hacky, we bassicly schedule the close on the pipeline to ensure the transfer will apply
             @Override
             public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-                if(!player.isCatchKicks()) {
+                if (!player.isCatchKicks()) {
                     super.close(ctx, promise);
                     return;
                 }
@@ -147,19 +155,11 @@ public class KickCatcher {
     }
 
     @SneakyThrows
-    public static byte[] parseVerifyCookie(VerifyCookie cookie) {
+    public static byte[] parseCookie(AESUtils utils, AbstractCookie cookie) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         cookie.write(dataOutputStream);
-        return ConveyBukkit.getInstance().getAesUtils().encrypt(byteArrayOutputStream.toByteArray());
-    }
-
-    @SneakyThrows
-    public static byte[] parseInternalCookie(InternalCookie cookie) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-        cookie.write(dataOutputStream);
-        return ConveyBukkit.getInstance().getAesUtils().encrypt(byteArrayOutputStream.toByteArray());
+        return utils.encrypt(byteArrayOutputStream.toByteArray());
     }
 
     @SneakyThrows

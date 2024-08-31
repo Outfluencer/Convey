@@ -20,7 +20,7 @@ public class PingPacket extends AbstractPacket {
 
     @Override
     public void write(ByteBuf buf) {
-       buf.writeLong(time);
+        buf.writeLong(time);
     }
 
     @Override

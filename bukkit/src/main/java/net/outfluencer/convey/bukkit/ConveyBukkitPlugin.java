@@ -14,7 +14,7 @@ import org.bukkit.plugin.java.annotation.plugin.author.Author;
 @ApiVersion(ApiVersion.Target.v1_20)
 public class ConveyBukkitPlugin extends JavaPlugin {
 
-   private ConveyBukkit convey;
+    private ConveyBukkit convey;
 
     @Override
     public void onEnable() {

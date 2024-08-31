@@ -17,6 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RemoteConveyPlayer implements ConveyPlayer {
 
+    private final ConveyBukkit convey;
     private final String name;
     private final UUID uniqueId;
 
@@ -27,12 +28,12 @@ public class RemoteConveyPlayer implements ConveyPlayer {
 
     @Override
     public void sendMessage(String message) {
-        ConveyBukkit.getInstance().sendIfConnected(() -> new SendMessageToPlayerPacket(Collections.singletonList(this.uniqueId), message));
+        this.convey.sendIfConnected(() -> new SendMessageToPlayerPacket(Collections.singletonList(this.uniqueId), message));
     }
 
     @Override
     public LocalConveyPlayer getLocalPlayer() {
-        for (ConveyPlayerImplBukkit player : ConveyBukkit.getInstance().getPlayerMap().values()) {
+        for (BukkitConveyPlayer player : this.convey.getPlayerMap().values()) {
             if (player.getUniqueId().equals(this.uniqueId)) {
                 return player;
             }
@@ -42,6 +43,6 @@ public class RemoteConveyPlayer implements ConveyPlayer {
 
     @Override
     public void kick(String message) {
-        ConveyBukkit.getInstance().sendIfConnected(() -> new PlayerKickPacket(new UserData(name, uniqueId), message));
+        this.convey.sendIfConnected(() -> new PlayerKickPacket(new UserData(this.name, this.uniqueId), message));
     }
 }

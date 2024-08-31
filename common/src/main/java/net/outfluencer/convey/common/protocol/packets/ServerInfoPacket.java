@@ -5,8 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import net.outfluencer.convey.common.api.CommonServer;
-import net.outfluencer.convey.common.protocol.AbstractPacketHandler;
 import net.outfluencer.convey.common.api.UserData;
+import net.outfluencer.convey.common.protocol.AbstractPacketHandler;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -13,6 +13,7 @@ import java.util.List;
 @Data
 public class ServerImplBukkit implements Server {
 
+    private final ConveyBukkit convey;
     private final String name;
     private final String address;
     private final boolean permissionRequired;
@@ -29,8 +30,8 @@ public class ServerImplBukkit implements Server {
     private boolean connected;
 
     public List<ConveyPlayer> getConnectedUsers() {
-        if (ConveyBukkit.getInstance().getConveyServer() != null && ConveyBukkit.getInstance().getConveyServer().getName().equals(getName())) {
-            return (List) ConveyBukkit.getInstance().getLocalPlayers();
+        if (this.convey.getConveyServer() != null && this.convey.getConveyServer().getName().equals(getName())) {
+            return (List) this.convey.getLocalPlayers();
         }
         return this.connectedUsers;
     }
