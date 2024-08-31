@@ -25,7 +25,7 @@ public class ServerCommand implements TabExecutor {
         ConveyBukkit convey = ConveyBukkit.getInstance();
         if (convey.getConveyServer() == null) {
             sender.sendMessage(ChatColor.RED + "Convey is loading...");
-            return false;
+            return true;
         }
         if (args.length == 0) {
             ComponentBuilder builder = new ComponentBuilder("Servers you may connect to: ");

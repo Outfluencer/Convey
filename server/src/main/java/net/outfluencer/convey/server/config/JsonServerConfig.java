@@ -5,10 +5,13 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import lombok.*;
 import net.outfluencer.convey.common.api.UserData;
-import net.outfluencer.convey.server.handler.ServerPacketHandler;
+import net.outfluencer.convey.common.protocol.packets.AbstractPacket;
 import net.outfluencer.convey.common.utils.AESUtils;
+import net.outfluencer.convey.server.handler.ServerPacketHandler;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -62,6 +65,12 @@ public class JsonServerConfig {
 
         public boolean isActive() {
             return packetHandler != null && packetHandler.isConnected();
+        }
+
+        public void trySendPacket(AbstractPacket packet) {
+            if (isActive()) {
+                packetHandler.getChannel().eventLoop().execute(() -> packetHandler.getChannel().writeAndFlush(packet));
+            }
         }
 
     }

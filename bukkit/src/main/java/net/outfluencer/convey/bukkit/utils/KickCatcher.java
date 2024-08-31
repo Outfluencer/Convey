@@ -131,7 +131,6 @@ public class KickCatcher {
             // sorry thats hacky, we bassicly schedule the close on the pipeline to ensure the transfer will apply
             @Override
             public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-
                 if(!player.isCatchKicks()) {
                     super.close(ctx, promise);
                     return;

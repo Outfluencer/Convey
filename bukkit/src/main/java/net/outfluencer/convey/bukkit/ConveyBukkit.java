@@ -17,6 +17,7 @@ import net.outfluencer.convey.api.cookie.CookieRegistry;
 import net.outfluencer.convey.api.player.ConveyPlayer;
 import net.outfluencer.convey.api.player.LocalConveyPlayer;
 import net.outfluencer.convey.bukkit.commands.ConveyCommand;
+import net.outfluencer.convey.bukkit.commands.GKickCommand;
 import net.outfluencer.convey.bukkit.commands.GListCommand;
 import net.outfluencer.convey.bukkit.commands.ServerCommand;
 import net.outfluencer.convey.bukkit.handler.ClientPacketHandler;
@@ -141,6 +142,7 @@ public class ConveyBukkit extends Convey {
         this.plugin.getCommand("convey").setExecutor(new ConveyCommand());
         this.plugin.getCommand("server").setExecutor(new ServerCommand());
         this.plugin.getCommand("glist").setExecutor(new GListCommand());
+        this.plugin.getCommand("gkick").setExecutor(new GKickCommand());
 
         Bukkit.getOnlinePlayers().forEach(player -> this.playerMap.put(player, new ConveyPlayerImplBukkit(player)));
     }
@@ -210,9 +212,9 @@ public class ConveyBukkit extends Convey {
         return (format != null) ? format.format(args) : "<translation '" + name + "' missing>";
     }
 
-    public boolean fallback(Player player, String reason) {
+    public boolean fallback(ConveyPlayerImplBukkit player, String reason) {
         for (Server server : servers.values()) {
-            if (server.isFallbackServer() && transferUtils.transferPlayer(this.getPlayerMap().get(player), server, false, reason)) {
+            if (server.isFallbackServer() && transferUtils.transferPlayer(player, server, false, reason)) {
                 return true;
             }
         }

@@ -19,7 +19,7 @@ public class GListCommand implements TabExecutor {
         ConveyBukkit convey = ConveyBukkit.getInstance();
         if (convey.getConveyServer() == null) {
             sender.sendMessage(ChatColor.RED + "Convey is loading...");
-            return false;
+            return true;
         }
         ComponentBuilder builder = new ComponentBuilder("List of all servers: ");
         ConveyBukkit.getInstance().getServers().values().forEach(server -> {

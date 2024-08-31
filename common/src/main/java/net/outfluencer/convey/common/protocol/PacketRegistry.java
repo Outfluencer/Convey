@@ -39,10 +39,10 @@ public class PacketRegistry {
         PACKET_IDS_TO_CLIENT = new HashMap<>();
 
         TO_SERVER = new Supplier[]{
-                HelloPacket::new, PingPacket::new, PlayerServerPacket::new, ServerSyncPacket::new
+                HelloPacket::new, PingPacket::new, PlayerServerPacket::new, ServerSyncPacket::new, PlayerKickPacket::new
         };
         TO_CLIENT = new Supplier[]{
-                ServerInfoPacket::new, PingPacket::new, PlayerServerPacket::new, AdminUsersPacket::new, SendMessageToPlayerPacket::new, ServerSyncPacket::new
+                ServerInfoPacket::new, PingPacket::new, PlayerServerPacket::new, AdminUsersPacket::new, SendMessageToPlayerPacket::new, ServerSyncPacket::new, PlayerKickPacket::new
         };
 
         for (int i = 0; i < TO_SERVER.length; i++) {

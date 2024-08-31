@@ -22,6 +22,7 @@ public class ServerPacketHandler extends AbstractPacketHandler {
     private final Convey convey;
 
     private boolean auth = false;
+    @Getter
     private Channel channel;
     @Getter
     private JsonServerConfig.Host currentHost;
@@ -108,9 +109,7 @@ public class ServerPacketHandler extends AbstractPacketHandler {
         }
         ServerSyncPacket serverSyncPacket = new ServerSyncPacket(currentHost.getName(), true, false, List.of());
         Convey.getConvey().getServerInfos().values().forEach(host -> {
-            if (host.getPacketHandler() != null && host.getPacketHandler().isConnected()) {
-                host.getPacketHandler().channel.writeAndFlush(serverSyncPacket);
-            }
+            host.trySendPacket(serverSyncPacket);
         });
     }
 
@@ -118,9 +117,7 @@ public class ServerPacketHandler extends AbstractPacketHandler {
     public void handle(ServerSyncPacket serverDisconnectedPacket) {
         serverDisconnectedPacket.setServer(currentHost.getName());
         Convey.getConvey().getServerInfos().values().forEach(host -> {
-            if (host.isActive()) {
-                host.getPacketHandler().channel.writeAndFlush(serverDisconnectedPacket);
-            }
+            host.trySendPacket(serverDisconnectedPacket);
         });
     }
 
@@ -139,9 +136,7 @@ public class ServerPacketHandler extends AbstractPacketHandler {
         }
 
         this.convey.getServerInfos().values().forEach(info -> {
-            if (info.isActive()) {
-                info.getPacketHandler().channel.writeAndFlush(playerServerPacket);
-            }
+            info.trySendPacket(playerServerPacket);
         });
     }
 
@@ -153,5 +148,12 @@ public class ServerPacketHandler extends AbstractPacketHandler {
         }
         sb.append(this.channel.remoteAddress()).append("]");
         return sb.toString();
+    }
+
+    @Override
+    public void handle(PlayerKickPacket playerKickPacket) {
+        this.convey.getServerInfos().values().forEach(info -> {
+            info.trySendPacket(playerKickPacket);
+        });
     }
 }

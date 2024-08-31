@@ -28,7 +28,7 @@ public class ConveyPlayerImplBukkit implements LocalConveyPlayer {
 
     private final Player player;
 
-    private boolean catchKicks = true;
+    private volatile boolean catchKicks = true;
 
     @Override
     public String getName() {

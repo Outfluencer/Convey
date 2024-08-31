@@ -15,7 +15,7 @@ public class ConveyCommand implements CommandExecutor {
         ConveyBukkit convey = ConveyBukkit.getInstance();
         if (convey.getConveyServer() == null) {
             sender.sendMessage(ChatColor.RED + "Convey is loading...");
-            return false;
+            return true;
         }
         sender.sendMessage(ChatColor.BLUE + "Convey by Outfluencer, current server name " + convey.getConveyServer().getName());
         for (Server server : convey.getServers().values()) {

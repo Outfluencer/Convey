@@ -23,12 +23,13 @@ public abstract class Convey {
      *
      * @return the list
      */
-    protected abstract List<LocalConveyPlayer> getLocalPlayers();
+    public abstract List<LocalConveyPlayer> getLocalPlayers();
 
     /**
      * Gets the List of all convey players on the network
      *
+     * @apiNote The returned list can contain LocalConveyPlayers
      * @return the list
      */
-    protected abstract List<ConveyPlayer> getGlobalPlayers();
+    public abstract List<ConveyPlayer> getGlobalPlayers();
 }

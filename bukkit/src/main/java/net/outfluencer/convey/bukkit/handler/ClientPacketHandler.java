@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.outfluencer.convey.api.Server;
 import net.outfluencer.convey.api.player.ConveyPlayer;
+import net.outfluencer.convey.api.player.LocalConveyPlayer;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.RemoteConveyPlayer;
 import net.outfluencer.convey.bukkit.impl.ServerImplBukkit;
@@ -89,9 +90,15 @@ public class ClientPacketHandler extends AbstractPacketHandler {
         Server server = convey.getServers().get(playerServerPacket.getServerName());
         if(server == convey.getConveyServer()) return;
         if(playerServerPacket.isJoin()) {
-            server.getConnectedUsers().add(new RemoteConveyPlayer( playerServerPacket.getUserData().getName(), playerServerPacket.getUserData().getUniqueId()));
+            // add local player to this list if possible
+            ConveyPlayer conveyPlayer = new RemoteConveyPlayer( playerServerPacket.getUserData().getName(), playerServerPacket.getUserData().getUniqueId());
+            LocalConveyPlayer localPlayer = conveyPlayer.getLocalPlayer();
+            if(localPlayer != null) {
+                conveyPlayer = localPlayer;
+            }
+            server.getConnectedUsers().add(conveyPlayer);
         } else {
-            server.getConnectedUsers().removeIf(user -> user.getUniqueId().equals(playerServerPacket.getUserData().getUniqueId()));
+            server.getConnectedUsers().removeIf(user -> !(user instanceof LocalConveyPlayer) && user.getUniqueId().equals(playerServerPacket.getUserData().getUniqueId()));
         }
     }
 
