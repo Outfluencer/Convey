@@ -15,7 +15,7 @@ import net.outfluencer.convey.api.cookie.builtin.KickCookie;
 import net.outfluencer.convey.bukkit.ConveyBukkit;
 import net.outfluencer.convey.bukkit.impl.BukkitConveyPlayer;
 import net.outfluencer.convey.bukkit.impl.ServerImplBukkit;
-import net.outfluencer.convey.common.utils.AESUtils;
+import net.outfluencer.convey.common.utils.AESGCMUtils;
 import org.bukkit.entity.Player;
 
 import java.io.ByteArrayOutputStream;
@@ -85,7 +85,7 @@ public class KickCatcher {
     @SneakyThrows
     public static void applyKickCatcher(BukkitConveyPlayer player) {
         ConveyBukkit convey = player.getConvey();
-        AESUtils aesUtils = convey.getAesUtils();
+        AESGCMUtils aesUtils = convey.getAesUtils();
         Player bukkitPlayer = player.getPlayer();
         UUID uuid = bukkitPlayer.getUniqueId();
         Object entityPlayer = getHandleMethod.invoke(bukkitPlayer);
@@ -155,7 +155,7 @@ public class KickCatcher {
     }
 
     @SneakyThrows
-    public static byte[] parseCookie(AESUtils utils, AbstractCookie cookie) {
+    public static byte[] parseCookie(AESGCMUtils utils, AbstractCookie cookie) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         cookie.write(dataOutputStream);

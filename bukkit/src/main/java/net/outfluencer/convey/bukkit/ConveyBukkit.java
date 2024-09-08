@@ -35,6 +35,7 @@ import net.outfluencer.convey.common.protocol.pipe.PacketEncoder;
 import net.outfluencer.convey.common.protocol.pipe.PacketHandler;
 import net.outfluencer.convey.common.protocol.pipe.Varint21FrameDecoder;
 import net.outfluencer.convey.common.protocol.pipe.Varint21LengthFieldPrepender;
+import net.outfluencer.convey.common.utils.AESGCMUtils;
 import net.outfluencer.convey.common.utils.AESUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -80,7 +81,7 @@ public class ConveyBukkit extends Convey {
     @Getter
     private SecretKey secretKey;
     @Getter
-    private AESUtils aesUtils;
+    private AESGCMUtils aesUtils;
     private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     @Getter
     @Setter
@@ -136,7 +137,7 @@ public class ConveyBukkit extends Convey {
             return;
         }
 
-        this.aesUtils = new AESUtils(secretKey);
+        this.aesUtils = new AESGCMUtils(secretKey);
         this.reloadMessages();
 
         Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(this), this.plugin);
