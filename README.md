@@ -1,7 +1,3 @@
-THIS PLUGIN CURRENTLY ONLY WORKS ON LATEST SPIGOT BUILD
-AS A FIX WAS REQUIRED FOR THIS PLUGIN TO WORK.
-(if you are on paper, you need to wait for upstream merge)
-
 Connects multiple minecraft servers via master server, cookie packets and transfers
 
 Contributions are welcome, we aim to provide bukkit, bungeecord and velocity support at first.
